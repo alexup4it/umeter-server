@@ -1,36 +1,138 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# UMeter Server
 
-## Getting Started
+API server for collecting data from UMeter devices, built with Next.js + Prisma.
 
-First, run the development server:
+## Installation
+
+```bash
+npm install
+```
+
+This will automatically set up Git hooks via [Husky](https://typicode.github.io/husky/) (through the `prepare` script).
+
+## Database Setup
+
+1. Copy `.env.example` to `.env`:
+```bash
+cp .env.example .env
+```
+
+2. Edit `.env` and set your MySQL connection parameters:
+```
+DATABASE_URL="mysql://user:password@localhost:3306/umeter"
+HMAC_SECRET="your-32-byte-hex-secret"
+```
+
+3. Sync the schema with the database:
+```bash
+npm run db:push
+```
+
+Or use migrations for production:
+```bash
+npm run db:migrate
+```
+
+## Running
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## API Endpoints
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+All API endpoints use HMAC-SHA256 authentication. Responses are signed via the `Authorization` header.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### GET /api/time
+Returns the current server time.
 
-## Learn More
+**Response:**
+```json
+{ "status": "ok", "ts": 1234567890 }
+```
 
-To learn more about Next.js, take a look at the following resources:
+### POST /api/info
+Saves device information.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**Request body:**
+```json
+{
+  "uid": "device-id",
+  "ts": 1234567890,
+  "name": "Device Name",
+  "bl_git": "git-hash",
+  "bl_status": 0,
+  "app_git": "git-hash",
+  "app_ver": 1,
+  "mcu": "STM32",
+  "apn": "internet",
+  "url_ota": "http://...",
+  "url_app": "http://...",
+  "period_app": 60,
+  "period_sen": 10,
+  "mtime_count": 100,
+  "sens": 1
+}
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### POST /api/cnet
+Saves cellular network information.
 
-## Deploy on Vercel
+**Request body:**
+```json
+{
+  "uid": "device-id",
+  "ts": 1234567890,
+  "mcc": 250,
+  "mnc": 1,
+  "lac": 1234,
+  "cid": 5678,
+  "lev": -70
+}
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### POST /api/data
+Saves sensor data. Fields `temp`, `hum`, `angle`, `count`, `count_max`, `count_min` are base64-encoded.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Request body:**
+```json
+{
+  "uid": "device-id",
+  "ts": 1234567890,
+  "ticks": 123456,
+  "bat": 4200,
+  "temp": "base64...",
+  "hum": "base64...",
+  "angle": "base64...",
+  "count": "base64...",
+  "count_max": "base64...",
+  "count_min": "base64...",
+  "dist": 100,
+  "tamper": false
+}
+```
+
+## Scripts
+
+- `npm run dev` — start in development mode
+- `npm run build` — build for production
+- `npm run start` — start production server
+- `npm run db:generate` — generate Prisma Client
+- `npm run db:push` — sync schema with database
+- `npm run db:migrate` — create a migration
+- `npm run db:studio` — launch Prisma Studio (database UI)
+
+## Git Hooks
+
+Git hooks are managed by [Husky](https://typicode.github.io/husky/) and set up automatically on `npm install`.
+
+| Hook | Action | Tool |
+|------|--------|------|
+| `pre-commit` | Lint staged files | [lint-staged](https://github.com/lint-staged/lint-staged) + ESLint |
+| `pre-push` | Full production build | `next build` |
+
+If hooks weren't installed (e.g. you cloned before dependencies were installed), run:
+
+```bash
+npm run prepare
+```

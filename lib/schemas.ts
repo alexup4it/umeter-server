@@ -1,0 +1,45 @@
+import { z } from 'zod';
+
+export const infoPayloadSchema = z.object({
+    uid: z.string().nullable().optional().default(null),
+    ts: z.number().default(0),
+    name: z.string().nullable().optional().default(null),
+    bl_git: z.string().nullable().optional().default(null),
+    bl_status: z.number().nullable().optional().default(null),
+    app_git: z.string().nullable().optional().default(null),
+    app_ver: z.number().nullable().optional().default(null),
+    mcu: z.string().nullable().optional().default(null),
+    apn: z.string().nullable().optional().default(null),
+    url_ota: z.string().nullable().optional().default(null),
+    url_app: z.string().nullable().optional().default(null),
+    period_app: z.number().nullable().optional().default(null),
+    period_sen: z.number().nullable().optional().default(null),
+    mtime_count: z.number().nullable().optional().default(null),
+    sens: z.number().nullable().optional().default(null),
+    color: z.string().nullable().optional().default(null),
+});
+
+export const cnetPayloadSchema = z.object({
+    uid: z.string().nullable().optional().default(null),
+    ts: z.number().default(0),
+    mcc: z.number().nullable().optional().default(null),
+    mnc: z.number().nullable().optional().default(null),
+    lac: z.number().nullable().optional().default(null),
+    cid: z.number().nullable().optional().default(null),
+    lev: z.number().nullable().optional().default(null),
+});
+
+export const dataPayloadSchema = z.object({
+    uid: z.string().nullable().optional().default(null),
+    ts: z.number().default(0),
+    ticks: z.number().nullable().optional().default(null),
+    bat: z.number().nullable().optional().default(null),
+    temp: z.string().nullable().optional().default(null),
+    hum: z.string().nullable().optional().default(null),
+    angle: z.string().nullable().optional().default(null),
+    count: z.string().nullable().optional().default(null),
+    count_max: z.string().nullable().optional().default(null),
+    count_min: z.string().nullable().optional().default(null),
+    dist: z.number().nullable().optional().default(null),
+    tamper: z.boolean().nullable().optional().default(null),
+});

@@ -1,0 +1,100 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Info {
+  id         Int       @id @default(autoincrement())
+  created    DateTime  @default(now())
+  uid        String?   @db.VarChar(256)
+  ts         DateTime?
+  name       String?   @db.VarChar(256)
+  blGit      String?   @map("bl_git") @db.VarChar(256)
+  blStatus   Int?      @map("bl_status")
+  appGit     String?   @map("app_git") @db.VarChar(256)
+  appVer     Int?      @map("app_ver")
+  mcu        String?   @db.VarChar(256)
+  apn        String?   @db.VarChar(256)
+  urlOta     String?   @map("url_ota") @db.VarChar(256)
+  urlApp     String?   @map("url_app") @db.VarChar(256)
+  periodApp  Int?      @map("period_app")
+  periodSen  Int?      @map("period_sen")
+  mtimeCount Int?      @map("mtime_count")
+  sens       Int?
+  color      String?   @db.VarChar(16)
+
+  @@map("info")
+}
+
+model Status {
+  id      Int       @id @default(autoincrement())
+  created DateTime  @default(now())
+  uid     String?   @db.VarChar(256)
+  ts      DateTime?
+  ticks   BigInt?
+  bat     Int?
+  dist    Int?
+  tamper  Boolean?
+
+  @@map("status")
+}
+
+model Temperature {
+  id      Int       @id @default(autoincrement())
+  created DateTime  @default(now())
+  uid     String?   @db.VarChar(256)
+  ts      DateTime?
+  temp    Int?
+
+  @@map("temperature")
+}
+
+model Humidity {
+  id      Int       @id @default(autoincrement())
+  created DateTime  @default(now())
+  uid     String?   @db.VarChar(256)
+  ts      DateTime?
+  hum     Int?
+
+  @@map("humidity")
+}
+
+model Angle {
+  id      Int       @id @default(autoincrement())
+  created DateTime  @default(now())
+  uid     String?   @db.VarChar(256)
+  ts      DateTime?
+  angle   Int?
+
+  @@map("angle")
+}
+
+model Counter {
+  id       Int       @id @default(autoincrement())
+  created  DateTime  @default(now())
+  uid      String?   @db.VarChar(256)
+  ts       DateTime?
+  count    BigInt?
+  countMax BigInt?   @map("count_max")
+  countMin BigInt?   @map("count_min")
+
+  @@map("counter")
+}
+
+model Cnet {
+  id      Int       @id @default(autoincrement())
+  created DateTime  @default(now())
+  uid     String?   @db.VarChar(256)
+  ts      DateTime?
+  mcc     Int?
+  mnc     Int?
+  lac     Int?
+  cid     Int?
+  lev     Int?
+
+  @@map("cnet")
+}

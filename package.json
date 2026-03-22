@@ -17,6 +17,9 @@
     "*.{ts,tsx,js,jsx,mjs,cjs}": "eslint --fix"
   },
   "dependencies": {
+    "@mantine/core": "^8.3.18",
+    "@mantine/hooks": "^8.3.18",
+    "@mantine/notifications": "^8.3.18",
     "@prisma/client": "^6.19.2",
     "next": "16.1.7",
     "react": "19.2.3",
@@ -30,6 +33,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/w3c-web-serial": "^1.0.8",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "eslint-plugin-jsdoc": "^62.8.0",
@@ -38,6 +42,8 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
+    "postcss-preset-mantine": "^1.18.0",
+    "postcss-simple-vars": "^7.0.1",
     "prisma": "^6.19.2",
     "tailwindcss": "^4",
     "typescript": "^5",

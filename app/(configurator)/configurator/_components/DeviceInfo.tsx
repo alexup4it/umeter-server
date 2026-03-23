@@ -104,42 +104,8 @@ export function DeviceInfo({
 
                     <Stack gap={ 4 }>
                         <Text size="xs" fw={ 600 } c="blue">
-                            Sensors
-                        </Text>
-                        <InfoRow
-                            label="Temp"
-                            value={ params.temp }
-                            suffix="\u00B0C"
-                        />
-                        <InfoRow
-                            label="Humidity"
-                            value={ params.hum }
-                            suffix="%"
-                        />
-                        <InfoRow
-                            label="Angle"
-                            value={ params.angle }
-                            suffix="\u00B0"
-                        />
-                        <InfoRow
-                            label="Count"
-                            value={ params.count }
-                        />
-                        <InfoRow
-                            label="Avail"
-                            value={ params.sens }
-                        />
-                    </Stack>
-
-                    <Stack gap={ 4 }>
-                        <Text size="xs" fw={ 600 } c="blue">
                             System
                         </Text>
-                        <InfoRow
-                            label="Battery"
-                            value={ params.bat }
-                            suffix=" mV"
-                        />
                         <InfoRow
                             label="Ticks"
                             value={ params.ticks }

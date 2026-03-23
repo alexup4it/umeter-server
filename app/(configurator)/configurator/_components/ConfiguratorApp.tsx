@@ -21,6 +21,7 @@ import {
     PARAM_KEY_MAP,
     type ProtocolResponse,
     READABLE_PARAMS,
+    type SensorParamName,
     WRITABLE_KEY_MAP,
     type WritableParams,
 } from '../_lib/types';
@@ -30,6 +31,7 @@ import { ConnectionPanel } from './ConnectionPanel';
 import { DeviceInfo } from './DeviceInfo';
 import { LogViewer } from './LogViewer';
 import { MemoryInfo } from './MemoryInfo';
+import { SensorsPanel } from './SensorsPanel';
 
 const MAX_LOG_ENTRIES = 1000;
 
@@ -312,6 +314,12 @@ export function ConfiguratorApp() {
         [sendCommand],
     );
 
+    const fetchSensorParam = useCallback(
+        (param: SensorParamName) =>
+            sendCommand(buildReadCommand(param)),
+        [sendCommand],
+    );
+
     const isConnected = connectionStatus === 'connected';
 
     return (
@@ -331,6 +339,10 @@ export function ConfiguratorApp() {
                                     loading={ loading }
                                     connected={ isConnected }
                                     onRefresh={ readAllParams }
+                                />
+                                <SensorsPanel
+                                    connected={ isConnected }
+                                    onFetchParam={ fetchSensorParam }
                                 />
                                 <MemoryInfo
                                     connected={ isConnected }

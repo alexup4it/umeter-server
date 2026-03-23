@@ -75,6 +75,18 @@ export const READABLE_PARAMS = [
 
 export type ReadableParamName = typeof READABLE_PARAMS[number];
 
+/** Sensor-related params for polling */
+export const SENSOR_PARAMS = [
+    'bat',
+    'temp',
+    'hum',
+    'angle',
+    'count',
+    'sens',
+] as const;
+
+export type SensorParamName = typeof SENSOR_PARAMS[number];
+
 export const WRITABLE_PARAMS = [
     'uid',
     'apn',

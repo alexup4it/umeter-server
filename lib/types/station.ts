@@ -6,8 +6,8 @@ export interface StationSummary {
     lastSeen: string | null;
     temperature: number | null;
     humidity: number | null;
-    angle: number | null;
-    count: number | null;
+    windDirection: number | null;
+    windSpeed: number | null;
     voltage: number | null;
 }
 
@@ -16,11 +16,11 @@ export interface SensorPoint {
     value: number;
 }
 
-export interface CounterPoint {
+export interface WindSpeedPoint {
     ts: string;
-    count: number | null;
-    countMax: number | null;
-    countMin: number | null;
+    windSpeedAvg: number | null;
+    windSpeedMax: number | null;
+    windSpeedMin: number | null;
 }
 
 export interface StationDetail {
@@ -36,8 +36,8 @@ export interface StationDetail {
     cnet: StationCnet | null;
     temperature: SensorPoint[];
     humidity: SensorPoint[];
-    angle: SensorPoint[];
-    counter: CounterPoint[];
+    windDirection: SensorPoint[];
+    windSpeed: WindSpeedPoint[];
 }
 
 export interface StationInfo {
@@ -47,8 +47,9 @@ export interface StationInfo {
     blStatus: number | null;
     mcu: string | null;
     apn: string | null;
-    periodApp: number | null;
-    periodSen: number | null;
+    periodUpload: number | null;
+    periodSensors: number | null;
+    periodAnemometer: number | null;
     sens: number | null;
 }
 

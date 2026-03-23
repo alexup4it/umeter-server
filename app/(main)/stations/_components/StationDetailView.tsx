@@ -66,8 +66,8 @@ export function StationDetailView({
                 uid={ uid }
                 temperature={ detail.temperature }
                 humidity={ detail.humidity }
-                angle={ detail.angle }
-                counter={ detail.counter }
+                windDirection={ detail.windDirection }
+                windSpeed={ detail.windSpeed }
             />
 
             <StationDataTable detail={ detail } />

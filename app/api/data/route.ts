@@ -44,10 +44,10 @@ export async function POST(request: NextRequest) {
                 voltage: r.voltage / 1000, // mV → V
                 temperature: r.temperature / 100, // centidegrees → °C
                 humidity: r.humidity / 100, // centipercent → %
-                angle: r.angle / 100, // centidegrees → °
-                countAvg: r.countAvg,
-                countMin: r.countMin,
-                countMax: r.countMax,
+                windDirection: r.windDirection / 100, // centidegrees → °
+                windSpeedAvg: r.windSpeedAvg,
+                windSpeedMin: r.windSpeedMin,
+                windSpeedMax: r.windSpeedMax,
             })),
         });
     }

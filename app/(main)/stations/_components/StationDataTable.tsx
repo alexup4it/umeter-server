@@ -41,11 +41,11 @@ export function StationDataTable({ detail }: {
     const latestHum = detail.humidity.length > 0
         ? detail.humidity[detail.humidity.length - 1]
         : null;
-    const latestAngle = detail.angle.length > 0
-        ? detail.angle[detail.angle.length - 1]
+    const latestWindDirection = detail.windDirection.length > 0
+        ? detail.windDirection[detail.windDirection.length - 1]
         : null;
-    const latestCount = detail.counter.length > 0
-        ? detail.counter[detail.counter.length - 1]
+    const latestWindSpeed = detail.windSpeed.length > 0
+        ? detail.windSpeed[detail.windSpeed.length - 1]
         : null;
 
     const rows: DataRow[] = [
@@ -64,23 +64,23 @@ export function StationDataTable({ detail }: {
             ts: latestHum?.ts,
         },
         {
-            label: 'Angle',
-            value: latestAngle
-                ? `${latestAngle.value.toFixed(1)}°`
+            label: 'Wind direction',
+            value: latestWindDirection
+                ? `${latestWindDirection.value.toFixed(1)}°`
                 : '-',
-            ts: latestAngle?.ts,
+            ts: latestWindDirection?.ts,
         },
         {
-            label: 'Count',
-            value: latestCount?.count ?? '-',
-            ts: latestCount?.ts,
+            label: 'Wind speed',
+            value: latestWindSpeed?.windSpeedAvg ?? '-',
+            ts: latestWindSpeed?.ts,
         },
         {
             label: 'Voltage',
             value: detail.voltage != null
                 ? `${detail.voltage.toFixed(2)} V`
                 : '-',
-            ts: latestCount?.ts ?? latestTemp?.ts,
+            ts: latestWindSpeed?.ts ?? latestTemp?.ts,
         },
         {
             label: 'Ticks',
@@ -126,12 +126,12 @@ export function StationDataTable({ detail }: {
         },
         {
             label: 'Period App',
-            value: detail.info?.periodApp ?? '-',
+            value: detail.info?.periodUpload ?? '-',
             ts: null,
         },
         {
             label: 'Period Sensor',
-            value: detail.info?.periodSen ?? '-',
+            value: detail.info?.periodSensors ?? '-',
             ts: null,
         },
         {

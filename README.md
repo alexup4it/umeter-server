@@ -68,9 +68,9 @@ Saves device information.
   "apn": "internet",
   "url_ota": "http://...",
   "url_app": "http://...",
-  "period_app": 60,
-  "period_sen": 10,
-  "mtime_count": 100,
+  "period_upload": 60,
+  "period_sensors": 10,
+  "period_anemometer": 100,
   "sens": 1
 }
 ```
@@ -92,7 +92,7 @@ Saves cellular network information.
 ```
 
 ### POST /api/data
-Saves sensor data. Fields `temp`, `hum`, `angle`, `count`, `count_max`, `count_min` are base64-encoded.
+Saves sensor data. Fields `temp`, `hum`, `wind_direction`, `wind_speed_avg`, `wind_speed_max`, `wind_speed_min` are base64-encoded.
 
 **Request body:**
 ```json
@@ -103,10 +103,10 @@ Saves sensor data. Fields `temp`, `hum`, `angle`, `count`, `count_max`, `count_m
   "bat": 4200,
   "temp": "base64...",
   "hum": "base64...",
-  "angle": "base64...",
-  "count": "base64...",
-  "count_max": "base64...",
-  "count_min": "base64...",
+  "wind_direction": "base64...",
+  "wind_speed_avg": "base64...",
+  "wind_speed_max": "base64...",
+  "wind_speed_min": "base64...",
   "dist": 100,
   "tamper": false
 }

@@ -55,8 +55,8 @@ export async function fetchStationSummaries(): Promise<
                 lastSeen: latestRecord?.ts?.toISOString() ?? null,
                 temperature: latestRecord?.temperature ?? null,
                 humidity: latestRecord?.humidity ?? null,
-                angle: latestRecord?.angle ?? null,
-                count: latestRecord?.countAvg ?? null,
+                windDirection: latestRecord?.windDirection ?? null,
+                windSpeed: latestRecord?.windSpeedAvg ?? null,
                 voltage: latestRecord?.voltage ?? null,
             };
         }),
@@ -127,8 +127,9 @@ export async function fetchStationDetail(
                 blStatus: info.blStatus,
                 mcu: info.mcu,
                 apn: info.apn,
-                periodApp: info.periodApp,
-                periodSen: info.periodSen,
+                periodUpload: info.periodUpload,
+                periodSensors: info.periodSensors,
+                periodAnemometer: info.periodAnemometer,
                 sens: info.sens,
             }
             : null,
@@ -149,15 +150,15 @@ export async function fetchStationDetail(
             ts: r.ts?.toISOString() ?? '',
             value: r.humidity ?? 0,
         })),
-        angle: records.map((r) => ({
+        windDirection: records.map((r) => ({
             ts: r.ts?.toISOString() ?? '',
-            value: r.angle ?? 0,
+            value: r.windDirection ?? 0,
         })),
-        counter: records.map((r) => ({
+        windSpeed: records.map((r) => ({
             ts: r.ts?.toISOString() ?? '',
-            count: r.countAvg,
-            countMax: r.countMax,
-            countMin: r.countMin,
+            windSpeedAvg: r.windSpeedAvg,
+            windSpeedMax: r.windSpeedMax,
+            windSpeedMin: r.windSpeedMin,
         })),
     };
 }

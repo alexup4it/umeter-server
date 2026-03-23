@@ -18,10 +18,10 @@ export interface RawSensorRecord {
     /** centipercent RH (0.01%) */
     humidity: number;
     /** centidegrees (0.01 deg) */
-    angle: number;
-    countAvg: number;
-    countMin: number;
-    countMax: number;
+    windDirection: number;
+    windSpeedAvg: number;
+    windSpeedMin: number;
+    windSpeedMax: number;
 }
 
 export interface ParsedPayload {
@@ -44,10 +44,10 @@ export interface ParsedPayload {
  *   4..5   uint16  voltage (mV)
  *   6..7   int16   temperature (centidegrees C)
  *   8..9   uint16  humidity (centipercent RH)
- *   10..11 uint16  angle (centidegrees)
- *   12..13 uint16  count_avg
- *   14..15 uint16  count_min
- *   16..17 uint16  count_max
+ *   10..11 uint16  wind_direction (centidegrees)
+ *   12..13 uint16  wind_direction_avg
+ *   14..15 uint16  wind_direction_min
+ *   16..17 uint16  wind_direction_max
  */
 export function parseDataPayload(buf: Buffer): ParsedPayload {
     if (buf.length < HEADER_SIZE) {
@@ -77,10 +77,10 @@ export function parseDataPayload(buf: Buffer): ParsedPayload {
             voltage: buf.readUInt16LE(off + 4),
             temperature: buf.readInt16LE(off + 6),
             humidity: buf.readUInt16LE(off + 8),
-            angle: buf.readUInt16LE(off + 10),
-            countAvg: buf.readUInt16LE(off + 12),
-            countMin: buf.readUInt16LE(off + 14),
-            countMax: buf.readUInt16LE(off + 16),
+            windDirection: buf.readUInt16LE(off + 10),
+            windSpeedAvg: buf.readUInt16LE(off + 12),
+            windSpeedMin: buf.readUInt16LE(off + 14),
+            windSpeedMax: buf.readUInt16LE(off + 16),
         });
     }
 

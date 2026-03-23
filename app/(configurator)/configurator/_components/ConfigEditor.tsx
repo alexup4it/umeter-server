@@ -38,9 +38,9 @@ export function ConfigEditor({
     const [apn, setApn] = useState('');
     const [urlOta, setUrlOta] = useState('');
     const [urlApp, setUrlApp] = useState('');
-    const [periodApp, setPeriodApp] = useState<number | string>('');
-    const [periodSen, setPeriodSen] = useState<number | string>('');
-    const [mtimeCount, setMtimeCount] =
+    const [periodUpload, setPeriodUpload] = useState<number | string>('');
+    const [periodSensors, setPeriodSensors] = useState<number | string>('');
+    const [periodAnemometer, setPeriodAnemometer] =
         useState<number | string>('');
     const [secret, setSecret] = useState('');
     const [saving, setSaving] = useState(false);
@@ -60,14 +60,14 @@ export function ConfigEditor({
         if (params.urlApp !== undefined) {
             setUrlApp(params.urlApp);
         }
-        if (params.periodApp !== undefined) {
-            setPeriodApp(params.periodApp);
+        if (params.periodUpload !== undefined) {
+            setPeriodUpload(params.periodUpload);
         }
-        if (params.periodSen !== undefined) {
-            setPeriodSen(params.periodSen);
+        if (params.periodSensors !== undefined) {
+            setPeriodSensors(params.periodSensors);
         }
-        if (params.mtimeCount !== undefined) {
-            setMtimeCount(params.mtimeCount);
+        if (params.periodAnemometer !== undefined) {
+            setPeriodAnemometer(params.periodAnemometer);
         }
     }, [params]);
 
@@ -98,16 +98,16 @@ export function ConfigEditor({
             if (urlApp !== '') {
                 await onWriteParam('urlApp', urlApp);
             }
-            if (periodApp !== '' && periodApp !== 0) {
-                await onWriteParam('periodApp', Number(periodApp));
+            if (periodUpload !== '' && periodUpload !== 0) {
+                await onWriteParam('periodUpload', Number(periodUpload));
             }
-            if (periodSen !== '' && periodSen !== 0) {
-                await onWriteParam('periodSen', Number(periodSen));
+            if (periodSensors !== '' && periodSensors !== 0) {
+                await onWriteParam('periodSensors', Number(periodSensors));
             }
-            if (mtimeCount !== '' && mtimeCount !== 0) {
+            if (periodAnemometer !== '' && periodAnemometer !== 0) {
                 await onWriteParam(
-                    'mtimeCount',
-                    Number(mtimeCount),
+                    'periodAnemometer',
+                    Number(periodAnemometer),
                 );
             }
             if (secret !== '') {
@@ -121,9 +121,9 @@ export function ConfigEditor({
         apn,
         urlOta,
         urlApp,
-        periodApp,
-        periodSen,
-        mtimeCount,
+        periodUpload,
+        periodSensors,
+        periodAnemometer,
         secret,
         onWriteParam,
     ]);
@@ -247,28 +247,28 @@ export function ConfigEditor({
 
                 <Group grow>
                     <NumberInput
-                        label="Period App"
+                        label="Period Upload"
                         description="App period (sec, >0)"
-                        value={ periodApp }
+                        value={ periodUpload }
                         min={ 1 }
                         disabled={ !connected }
-                        onChange={ setPeriodApp }
+                        onChange={ setPeriodUpload }
                     />
                     <NumberInput
-                        label="Period Sen"
+                        label="Period Sensors"
                         description="Sensor period (sec)"
-                        value={ periodSen }
+                        value={ periodSensors }
                         min={ 1 }
                         disabled={ !connected }
-                        onChange={ setPeriodSen }
+                        onChange={ setPeriodSensors }
                     />
                     <NumberInput
-                        label="MTime Count"
-                        description="Measurement count"
-                        value={ mtimeCount }
+                        label="Period Anemometer"
+                        description="Anemometer period (sec)"
+                        value={ periodAnemometer }
                         min={ 1 }
                         disabled={ !connected }
-                        onChange={ setMtimeCount }
+                        onChange={ setPeriodAnemometer }
                     />
                 </Group>
 

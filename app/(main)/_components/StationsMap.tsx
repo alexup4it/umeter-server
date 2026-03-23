@@ -121,21 +121,21 @@ export default function StationsMap({ stations }: StationsMapProps) {
                                     <div>
                                         <Text size="xs" c="dimmed" lh={ 1.2 }>Wind</Text>
                                         <Text size="xs" fw={ 500 } lh={ 1.3 }>
-                                            { station.count != null ? `${station.count}` : '--' }
+                                            { station.windSpeed != null ? `${station.windSpeed}` : '--' }
                                         </Text>
                                     </div>
                                     <div>
                                         <Text size="xs" c="dimmed" lh={ 1.2 }>Direction</Text>
                                         <Text size="xs" fw={ 500 } lh={ 1.3 }>
-                                            { station.angle != null
+                                            { station.windDirection != null
                                                 ? (
-                                                    <span title={ `${station.angle.toFixed(1)}°` }>
-                                                        { degToCompass(station.angle) }
+                                                    <span title={ `${station.windDirection.toFixed(1)}°` }>
+                                                        { degToCompass(station.windDirection) }
                                                         { ' ' }
                                                         <span
                                                             style={ {
                                                                 display: 'inline-block',
-                                                                transform: `rotate(${station.angle}deg)`,
+                                                                transform: `rotate(${station.windDirection}deg)`,
                                                             } }
                                                         >
                                                             ↑

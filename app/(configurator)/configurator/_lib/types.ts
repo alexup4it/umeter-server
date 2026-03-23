@@ -27,15 +27,15 @@ export interface DeviceParams {
     apn: string;
     urlOta: string;
     urlApp: string;
-    periodApp: number;
-    periodSen: number;
-    mtimeCount: number;
+    periodUpload: number;
+    periodSensors: number;
+    periodAnemometer: number;
     sens: number;
     bat: number;
-    count: number;
     temp: number;
     hum: number;
-    angle: number;
+    windSpeed: number;
+    windDirection: number;
 }
 
 export interface WritableParams {
@@ -43,9 +43,9 @@ export interface WritableParams {
     apn: string;
     urlOta: string;
     urlApp: string;
-    periodApp: number;
-    periodSen: number;
-    mtimeCount: number;
+    periodUpload: number;
+    periodSensors: number;
+    periodAnemometer: number;
     secret: string;
 }
 
@@ -62,15 +62,15 @@ export const READABLE_PARAMS = [
     'apn',
     'url_ota',
     'url_app',
-    'period_app',
-    'period_sen',
-    'mtime_count',
+    'period_upload',
+    'period_sensors',
+    'period_anemometer',
     'sens',
     'bat',
-    'count',
     'temp',
     'hum',
-    'angle',
+    'wind_speed',
+    'wind_direction',
 ] as const;
 
 export type ReadableParamName = typeof READABLE_PARAMS[number];
@@ -80,8 +80,8 @@ export const SENSOR_PARAMS = [
     'bat',
     'temp',
     'hum',
-    'angle',
-    'count',
+    'wind_speed',
+    'wind_direction',
     'sens',
 ] as const;
 
@@ -92,9 +92,9 @@ export const WRITABLE_PARAMS = [
     'apn',
     'url_ota',
     'url_app',
-    'period_app',
-    'period_sen',
-    'mtime_count',
+    'period_upload',
+    'period_sensors',
+    'period_anemometer',
     'secret',
 ] as const;
 
@@ -114,15 +114,15 @@ export const PARAM_KEY_MAP: Record<ReadableParamName, keyof DeviceParams> = {
     apn: 'apn',
     url_ota: 'urlOta',
     url_app: 'urlApp',
-    period_app: 'periodApp',
-    period_sen: 'periodSen',
-    mtime_count: 'mtimeCount',
+    period_upload: 'periodUpload',
+    period_sensors: 'periodSensors',
+    period_anemometer: 'periodAnemometer',
     sens: 'sens',
     bat: 'bat',
-    count: 'count',
     temp: 'temp',
     hum: 'hum',
-    angle: 'angle',
+    wind_speed: 'windSpeed',
+    wind_direction: 'windDirection',
 };
 
 /** Maps WritableParams keys to wire param names */
@@ -131,9 +131,9 @@ export const WRITABLE_KEY_MAP: Record<keyof WritableParams, WritableParamName> =
     apn: 'apn',
     urlOta: 'url_ota',
     urlApp: 'url_app',
-    periodApp: 'period_app',
-    periodSen: 'period_sen',
-    mtimeCount: 'mtime_count',
+    periodUpload: 'period_upload',
+    periodSensors: 'period_sensors',
+    periodAnemometer: 'period_anemometer',
     secret: 'secret',
 };
 

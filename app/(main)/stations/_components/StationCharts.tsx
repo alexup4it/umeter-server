@@ -6,7 +6,7 @@ import { LineChart } from '@mantine/charts';
 import { Box, Paper, Stack, Title } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
 
-import type { CounterPoint, SensorPoint } from '@/lib/types/station';
+import type { WindSpeedPoint, SensorPoint } from '@/lib/types/station';
 
 const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const POLL_INTERVAL_MS = 30_000;
@@ -51,24 +51,24 @@ function formatDate(dateString: string): string {
 interface ChartData {
     temperature: SensorPoint[];
     humidity: SensorPoint[];
-    angle: SensorPoint[];
-    counter: CounterPoint[];
+    windDirection: SensorPoint[];
+    windSpeed: WindSpeedPoint[];
 }
 
 interface StationChartsProps {
     uid: string;
     temperature: SensorPoint[];
     humidity: SensorPoint[];
-    angle: SensorPoint[];
-    counter: CounterPoint[];
+    windDirection: SensorPoint[];
+    windSpeed: WindSpeedPoint[];
 }
 
 export function StationCharts({
     uid,
     temperature: initTemp,
     humidity: initHum,
-    angle: initAngle,
-    counter: initCount,
+    windDirection: initWindDirection,
+    windSpeed: initWindSpeed,
 }: StationChartsProps) {
     const [dateRange, setDateRange] = useState<
         [Date | null, Date | null]
@@ -76,8 +76,8 @@ export function StationCharts({
 
     const [temperature, setTemperature] = useState(initTemp);
     const [humidity, setHumidity] = useState(initHum);
-    const [angle, setAngle] = useState(initAngle);
-    const [counter, setCounter] = useState(initCount);
+    const [windDirection, setWindDirection] = useState(initWindDirection);
+    const [windSpeed, setWindSpeed] = useState(initWindSpeed);
 
     const dateRangeRef = useRef(dateRange);
 
@@ -118,8 +118,8 @@ export function StationCharts({
                     ChartData;
                 setTemperature(data.temperature);
                 setHumidity(data.humidity);
-                setAngle(data.angle);
-                setCounter(data.counter);
+                setWindDirection(data.windDirection);
+                setWindSpeed(data.windSpeed);
             }
         },
         [uid],
@@ -191,14 +191,16 @@ export function StationCharts({
         humidity: pt.value,
     }));
 
-    const angleChartData = angle.map((pt) => ({
+    const windDirectionChartData = windDirection.map((pt) => ({
         date: formatDate(pt.ts),
-        angle: pt.value,
+        windDirection: pt.value,
     }));
 
-    const countChartData = counter.map((pt) => ({
+    const windSpeedChartData = windSpeed.map((pt) => ({
         date: formatDate(pt.ts),
-        count: pt.count ?? 0,
+        windSpeedAvg: pt.windSpeedAvg ?? 0,
+        windSpeedMin: pt.windSpeedMin ?? 0,
+        windSpeedMax: pt.windSpeedMax ?? 0,
     }));
 
     return (
@@ -260,10 +262,10 @@ export function StationCharts({
                 </Title>
                 <LineChart
                     h={ 300 }
-                    data={ angleChartData }
+                    data={ windDirectionChartData }
                     dataKey="date"
                     series={ [{
-                        name: 'angle',
+                        name: 'windDirection',
                         color: 'teal.6',
                     }] }
                     curveType="natural"
@@ -274,14 +276,14 @@ export function StationCharts({
 
             <Paper withBorder p="md" radius="md">
                 <Title order={ 4 } mb="md">
-                    Wind Speed (Count)
+                    Wind Speed
                 </Title>
                 <LineChart
                     h={ 300 }
-                    data={ countChartData }
+                    data={ windSpeedChartData }
                     dataKey="date"
                     series={ [{
-                        name: 'count',
+                        name: 'windSpeedAvg',
                         color: 'orange.6',
                     }] }
                     curveType="natural"

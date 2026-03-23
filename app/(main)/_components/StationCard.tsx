@@ -97,16 +97,16 @@ export function StationCard({ station }: StationCardProps) {
                 </Paper>
 
                 <Paper withBorder p="xs">
-                    <Text size="xs" c="dimmed">Angle</Text>
+                    <Text size="xs" c="dimmed">Wind direction</Text>
                     <Text fw={ 500 }>
-                        { station.angle != null ? `${station.angle.toFixed(1)}°` : '--' }
+                        { station.windDirection != null ? `${station.windDirection.toFixed(1)}°` : '--' }
                     </Text>
                 </Paper>
 
                 <Paper withBorder p="xs">
-                    <Text size="xs" c="dimmed">Count</Text>
+                    <Text size="xs" c="dimmed">Wind speed</Text>
                     <Text fw={ 500 }>
-                        { station.count ?? '--' }
+                        { station.windSpeed ?? '--' }
                     </Text>
                 </Paper>
 

@@ -28,8 +28,8 @@ interface SensorData {
     bat: number | null;
     temp: number | null;
     hum: number | null;
-    angle: number | null;
-    count: number | null;
+    windDirection: number | null;
+    windSpeed: number | null;
     sens: number | null;
 }
 
@@ -86,8 +86,8 @@ export function SensorsPanel({
         bat: null,
         temp: null,
         hum: null,
-        angle: null,
-        count: null,
+        windDirection: null,
+        windSpeed: null,
         sens: null,
     });
     const [loading, setLoading] = useState(false);
@@ -152,8 +152,8 @@ export function SensorsPanel({
                 bat: null,
                 temp: null,
                 hum: null,
-                angle: null,
-                count: null,
+                windDirection: null,
+                windSpeed: null,
                 sens: null,
             });
         }
@@ -228,8 +228,8 @@ export function SensorsPanel({
                     suffix=" %"
                 />
                 <SensorRow
-                    label="Angle"
-                    value={ formatMilliValue(data.angle, 1) }
+                    label="Wind direction"
+                    value={ formatMilliValue(data.windDirection, 1) }
                     suffix="°"
                 />
                 <SensorRow
@@ -237,10 +237,10 @@ export function SensorsPanel({
                     value={ formatVoltage(data.bat) }
                 />
                 <SensorRow
-                    label="Count"
+                    label="Wind speed"
                     value={
-                        data.count !== null
-                            ? String(data.count)
+                        data.windSpeed !== null
+                            ? String(data.windSpeed)
                             : null
                     }
                 />

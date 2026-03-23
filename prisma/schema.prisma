@@ -8,26 +8,26 @@ datasource db {
 }
 
 model Info {
-  id         Int       @id @default(autoincrement())
-  created    DateTime  @default(now())
-  uid        Int?
-  ts         DateTime?
-  name       String?   @db.VarChar(256)
-  blGit      String?   @map("bl_git") @db.VarChar(256)
-  blStatus   Int?      @map("bl_status")
-  appGit     String?   @map("app_git") @db.VarChar(256)
-  appVer     Int?      @map("app_ver")
-  mcu        String?   @db.VarChar(256)
-  apn        String?   @db.VarChar(256)
-  urlOta     String?   @map("url_ota") @db.VarChar(256)
-  urlApp     String?   @map("url_app") @db.VarChar(256)
-  periodApp  Int?      @map("period_app")
-  periodSen  Int?      @map("period_sen")
-  mtimeCount Int?      @map("mtime_count")
-  sens       Int?
-  color      String?   @db.VarChar(16)
-  lat        Float?
-  lng        Float?
+  id               Int       @id @default(autoincrement())
+  created          DateTime  @default(now())
+  uid              Int?
+  ts               DateTime?
+  name             String?   @db.VarChar(256)
+  blGit            String?   @map("bl_git") @db.VarChar(256)
+  blStatus         Int?      @map("bl_status")
+  appGit           String?   @map("app_git") @db.VarChar(256)
+  appVer           Int?      @map("app_ver")
+  mcu              String?   @db.VarChar(256)
+  apn              String?   @db.VarChar(256)
+  urlOta           String?   @map("url_ota") @db.VarChar(256)
+  urlApp           String?   @map("url_app") @db.VarChar(256)
+  periodUpload     Int?      @map("period_upload")
+  periodSensors    Int?      @map("period_sensors")
+  periodAnemometer Int?      @map("period_anemometer")
+  sens             Int?
+  color            String?   @db.VarChar(16)
+  lat              Float?
+  lng              Float?
 
   @@map("info")
 }
@@ -45,17 +45,17 @@ model Status {
 }
 
 model SensorRecord {
-  id          Int       @id @default(autoincrement())
-  created     DateTime  @default(now())
-  uid         Int?
-  ts          DateTime?
-  voltage     Float?
-  temperature Float?
-  humidity    Float?
-  angle       Float?
-  countAvg    Int?      @map("count_avg")
-  countMin    Int?      @map("count_min")
-  countMax    Int?      @map("count_max")
+  id            Int       @id @default(autoincrement())
+  created       DateTime  @default(now())
+  uid           Int?
+  ts            DateTime?
+  voltage       Float?
+  temperature   Float?
+  humidity      Float?
+  windDirection Float?    @map("wind_direction")
+  windSpeedAvg  Int?      @map("wind_speed_avg")
+  windSpeedMin  Int?      @map("wind_speed_min")
+  windSpeedMax  Int?      @map("wind_speed_max")
 
   @@map("sensor_record")
 }

@@ -26,6 +26,8 @@ model Info {
   mtimeCount Int?      @map("mtime_count")
   sens       Int?
   color      String?   @db.VarChar(16)
+  lat        Float?
+  lng        Float?
 
   @@map("info")
 }

@@ -1,0 +1,35 @@
+import { NextRequest, NextResponse } from 'next/server';
+
+import { fetchStationDetail } from '@/lib/data/stations';
+
+export const dynamic = 'force-dynamic';
+
+/**
+ * GET /api/stations/[uid]
+ * Returns detailed station data with sensor history.
+ * Query params: from, to (ISO date strings). Defaults to last 7 days.
+ */
+export async function GET(
+    request: NextRequest,
+    { params }: { params: Promise<{ uid: string }> },
+) {
+    const { uid } = await params;
+    const searchParams = request.nextUrl.searchParams;
+
+    const fromParam = searchParams.get('from');
+    const toParam = searchParams.get('to');
+
+    const from = fromParam ? new Date(fromParam) : undefined;
+    const to = toParam ? new Date(toParam) : undefined;
+
+    const detail = await fetchStationDetail(uid, from, to);
+
+    if (!detail) {
+        return NextResponse.json(
+            { error: 'Station not found' },
+            { status: 404 },
+        );
+    }
+
+    return NextResponse.json(detail);
+}

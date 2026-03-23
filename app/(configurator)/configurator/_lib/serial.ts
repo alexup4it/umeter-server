@@ -16,6 +16,9 @@ export class SerialConnection {
     private _onResponse: ResponseHandler | null = null;
     private _onLog: LogHandler | null = null;
     private _onStatusChange: StatusHandler | null = null;
+    private _onAutoConnected: (() => void) | null = null;
+
+    private _connectListener: (() => void) | null = null;
 
     private _encoder = new TextEncoder();
     private _decoder = new TextDecoder();
@@ -34,6 +37,42 @@ export class SerialConnection {
 
     set onStatusChange(handler: StatusHandler | null) {
         this._onStatusChange = handler;
+    }
+
+    /** Called after a successful auto-connect triggered by device plug-in */
+    set onAutoConnected(handler: (() => void) | null) {
+        this._onAutoConnected = handler;
+    }
+
+    /**
+     * Start listening for device connect events.
+     * When a previously-granted device is plugged in,
+     * auto-connects and fires onAutoConnected.
+     */
+    watchConnect(): void {
+        if (this._connectListener) {
+            return;
+        }
+
+        this._connectListener = () => {
+            void this._handleDeviceConnect();
+        };
+
+        navigator.serial.addEventListener(
+            'connect',
+            this._connectListener,
+        );
+    }
+
+    /** Stop listening for device connect events. */
+    unwatchConnect(): void {
+        if (this._connectListener) {
+            navigator.serial.removeEventListener(
+                'connect',
+                this._connectListener,
+            );
+            this._connectListener = null;
+        }
     }
 
     /**
@@ -139,6 +178,18 @@ export class SerialConnection {
         this._startReadLoop();
     }
 
+    private async _handleDeviceConnect(): Promise<void> {
+        if (this._port) {
+            return;
+        }
+
+        console.debug('[serial] device connected, attempting auto-connect');
+        const connected = await this.autoConnect();
+        if (connected) {
+            this._onAutoConnected?.();
+        }
+    }
+
     private _setStatus(status: ConnectionStatus): void {
         this._status = status;
         this._onStatusChange?.(status);
@@ -189,6 +240,10 @@ export class SerialConnection {
 
         for (const line of lines) {
             const cleaned = line.replace(/\r$/, '');
+            if (cleaned.length > 0) {
+                console.debug('< %s', cleaned);
+            }
+
             const parsed = parseLine(cleaned);
 
             if (!parsed) {

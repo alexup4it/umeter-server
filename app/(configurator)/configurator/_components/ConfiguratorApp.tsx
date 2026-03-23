@@ -94,30 +94,45 @@ export function ConfiguratorApp() {
         };
     }, [getSerial, handleResponse, handleLog, handleConnectionChange]);
 
-    // Auto-connect to last used port on mount
+    // Auto-connect on mount + reconnect when device is plugged in
     useEffect(() => {
-        void (async () => {
-            const serial = getSerial();
-            const connected = await serial.autoConnect();
+        const serial = getSerial();
 
-            if (connected) {
-                try {
-                    const ifaceResponse =
-                        await sendCommand(buildIfaceCommand());
+        const verifyIface = async (): Promise<void> => {
+            try {
+                const response =
+                    await sendCommand(buildIfaceCommand());
 
-                    if (ifaceResponse.status !== 'ok') {
-                        notifications.show({
-                            title: 'Warning',
-                            message:
-                                'Device responded with error',
-                            color: 'yellow',
-                        });
-                    }
-                } catch {
-                    // iface check failed — still connected
+                if (response.status !== 'ok') {
+                    notifications.show({
+                        title: 'Warning',
+                        message:
+                            'Device responded with error',
+                        color: 'yellow',
+                    });
                 }
+            } catch {
+                // iface check failed — still connected
+            }
+        };
+
+        serial.onAutoConnected = () => {
+            void verifyIface();
+        };
+
+        void (async () => {
+            const connected = await serial.autoConnect();
+            if (connected) {
+                void verifyIface();
             }
         })();
+
+        serial.watchConnect();
+
+        return () => {
+            serial.onAutoConnected = null;
+            serial.unwatchConnect();
+        };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- mount only
     }, []);
 

@@ -1,7 +1,12 @@
 import type { Metadata } from 'next';
 import { JetBrains_Mono } from 'next/font/google';
 
-import { createTheme, MantineProvider } from '@mantine/core';
+import {
+    ColorSchemeScript,
+    createTheme,
+    mantineHtmlProps,
+    MantineProvider,
+} from '@mantine/core';
 
 import '@mantine/core/styles.css';
 import '@mantine/dates/styles.css';
@@ -32,9 +37,11 @@ export default function RootLayout({
         <html
             className={ jetbrainsMono.variable }
             lang="en"
-            data-mantine-color-scheme="dark"
+            { ...mantineHtmlProps }
         >
-            <head />
+            <head>
+                <ColorSchemeScript defaultColorScheme="dark" />
+            </head>
             <body>
                 <MantineProvider
                     theme={ theme }

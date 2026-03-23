@@ -7,16 +7,17 @@ import { SimpleGrid, Text } from '@mantine/core';
 import type { StationSummary } from '@/lib/types/station';
 
 import { StationCard } from './StationCard';
-import { StationsMapLoader } from './StationsMapLoader';
 
 const POLL_INTERVAL_MS = 30_000;
 
 interface StationsDashboardProps {
     initialStations: StationSummary[];
+    map?: React.ReactNode;
 }
 
 export function StationsDashboard({
     initialStations,
+    map,
 }: StationsDashboardProps) {
     const [stations, setStations] = useState(initialStations);
 
@@ -79,7 +80,7 @@ export function StationsDashboard({
                 )) }
             </SimpleGrid>
 
-            <StationsMapLoader stations={ stations } />
+            { map }
         </>
     );
 }

@@ -12,7 +12,13 @@ export default async function StationPage({
 }: {
     params: Promise<{ uid: string }>;
 }) {
-    const { uid } = await params;
+    const { uid: uidParam } = await params;
+    const uid = Number(uidParam);
+
+    if (Number.isNaN(uid)) {
+        notFound();
+    }
+
     const detail = await fetchStationDetail(uid);
 
     if (!detail) {
@@ -31,7 +37,7 @@ export default async function StationPage({
             </Group>
 
             <StationDetailView
-                uid={ uid }
+                uid={ String(uid) }
                 initialDetail={ detail }
             />
         </Container>

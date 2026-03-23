@@ -1,1 +1,6 @@
 /* Main layout styles - Mantine handles theming */
+
+/* Compact Leaflet popups on the stations map */
+.leaflet-popup-content {
+    margin: 8px 10px;
+}

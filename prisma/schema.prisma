@@ -10,7 +10,7 @@ datasource db {
 model Info {
   id         Int       @id @default(autoincrement())
   created    DateTime  @default(now())
-  uid        String?   @db.VarChar(256)
+  uid        Int?
   ts         DateTime?
   name       String?   @db.VarChar(256)
   blGit      String?   @map("bl_git") @db.VarChar(256)
@@ -33,64 +33,37 @@ model Info {
 }
 
 model Status {
-  id      Int       @id @default(autoincrement())
-  created DateTime  @default(now())
-  uid     String?   @db.VarChar(256)
-  ts      DateTime?
-  ticks   BigInt?
-  bat     Int?
-  dist    Int?
-  tamper  Boolean?
+  id           Int       @id @default(autoincrement())
+  created      DateTime  @default(now())
+  uid          Int?
+  ts           DateTime?
+  ticks        BigInt?
+  tamper       Boolean?
+  recordsCount Int?      @map("records_count")
 
   @@map("status")
 }
 
-model Temperature {
-  id      Int       @id @default(autoincrement())
-  created DateTime  @default(now())
-  uid     String?   @db.VarChar(256)
-  ts      DateTime?
-  temp    Float?
+model SensorRecord {
+  id          Int       @id @default(autoincrement())
+  created     DateTime  @default(now())
+  uid         Int?
+  ts          DateTime?
+  voltage     Float?
+  temperature Float?
+  humidity    Float?
+  angle       Float?
+  countAvg    Int?      @map("count_avg")
+  countMin    Int?      @map("count_min")
+  countMax    Int?      @map("count_max")
 
-  @@map("temperature")
-}
-
-model Humidity {
-  id      Int       @id @default(autoincrement())
-  created DateTime  @default(now())
-  uid     String?   @db.VarChar(256)
-  ts      DateTime?
-  hum     Float?
-
-  @@map("humidity")
-}
-
-model Angle {
-  id      Int       @id @default(autoincrement())
-  created DateTime  @default(now())
-  uid     String?   @db.VarChar(256)
-  ts      DateTime?
-  angle   Float?
-
-  @@map("angle")
-}
-
-model Counter {
-  id       Int       @id @default(autoincrement())
-  created  DateTime  @default(now())
-  uid      String?   @db.VarChar(256)
-  ts       DateTime?
-  count    BigInt?
-  countMax BigInt?   @map("count_max")
-  countMin BigInt?   @map("count_min")
-
-  @@map("counter")
+  @@map("sensor_record")
 }
 
 model Cnet {
   id      Int       @id @default(autoincrement())
   created DateTime  @default(now())
-  uid     String?   @db.VarChar(256)
+  uid     Int?
   ts      DateTime?
   mcc     Int?
   mnc     Int?

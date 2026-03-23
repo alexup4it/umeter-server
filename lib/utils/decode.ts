@@ -1,91 +1,91 @@
-/**
- * Decode base64 encoded binary data to array of {value, ts} objects
- * Each item is 8 bytes: 4 bytes value (little-endian) + 4 bytes timestamp (little-endian)
- * @param data
- * @param signed
- */
-export function decodeBase64(
-    data: string | null | undefined,
-    signed = false,
-): { value: number; ts: number }[] | null {
-    if (!data) {
-        return null;
-    }
+const HEADER_SIZE = 14;
+const RECORD_SIZE = 18;
 
-    const buffer = Buffer.from(data, 'base64');
-    const result: { value: number; ts: number }[] = [];
-
-    let i = 0;
-    while (i <= buffer.length - 8) {
-        const value = signed
-            ? buffer.readInt32LE(i)
-            : buffer.readUInt32LE(i);
-        const ts = buffer.readUInt32LE(i + 4);
-        result.push({ value, ts });
-        i += 8;
-    }
-
-    return result;
+export interface DataHeader {
+    uid: number;
+    ts: number;
+    ticks: number;
+    tamper: boolean;
+    recordsCount: number;
 }
 
-interface CountEntry {
-    count: number | null;
-    countMax: number | null;
-    countMin: number | null;
+export interface RawSensorRecord {
+    timestamp: number;
+    /** millivolts */
+    voltage: number;
+    /** centidegrees C (0.01 C) */
+    temperature: number;
+    /** centipercent RH (0.01%) */
+    humidity: number;
+    /** centidegrees (0.01 deg) */
+    angle: number;
+    countAvg: number;
+    countMin: number;
+    countMax: number;
+}
+
+export interface ParsedPayload {
+    header: DataHeader;
+    records: RawSensorRecord[];
 }
 
 /**
- * Merge count, count_max, count_min arrays into a single object keyed by timestamp
- * @param count
- * @param countMax
- * @param countMin
- * @returns Map of timestamp to { count, countMax, countMin }
+ * Parse binary data payload.
+ *
+ * Header (14 bytes, little-endian):
+ *   0..3   uint32  uid
+ *   4..7   uint32  ts
+ *   8..11  uint32  ticks
+ *   12     uint8   tamper (0/1)
+ *   13     uint8   records count
+ *
+ * Records (N x 18 bytes each):
+ *   0..3   uint32  timestamp
+ *   4..5   uint16  voltage (mV)
+ *   6..7   int16   temperature (centidegrees C)
+ *   8..9   uint16  humidity (centipercent RH)
+ *   10..11 uint16  angle (centidegrees)
+ *   12..13 uint16  count_avg
+ *   14..15 uint16  count_min
+ *   16..17 uint16  count_max
  */
-export function mergeCount(
-    count: { value: number; ts: number }[] | null,
-    countMax: { value: number; ts: number }[] | null,
-    countMin: { value: number; ts: number }[] | null,
-): Map<number, CountEntry> | null {
-    if (!count || !countMax || !countMin) {
-        return null;
+export function parseDataPayload(buf: Buffer): ParsedPayload {
+    if (buf.length < HEADER_SIZE) {
+        throw new Error(
+            `Payload too short: expected at least ${HEADER_SIZE} bytes, got ${buf.length}`,
+        );
     }
 
-    const result = new Map<number, CountEntry>();
+    const uid = buf.readUInt32LE(0);
+    const ts = buf.readUInt32LE(4);
+    const ticks = buf.readUInt32LE(8);
+    const tamper = buf[12] !== 0;
+    const recordsCount = buf[13];
 
-    // Initialize all timestamps
-    for (const item of count) {
-        result.set(item.ts, { count: null, countMax: null, countMin: null });
-    }
-    for (const item of countMax) {
-        if (!result.has(item.ts)) {
-            result.set(item.ts, { count: null, countMax: null, countMin: null });
-        }
-    }
-    for (const item of countMin) {
-        if (!result.has(item.ts)) {
-            result.set(item.ts, { count: null, countMax: null, countMin: null });
-        }
+    const expectedSize = HEADER_SIZE + recordsCount * RECORD_SIZE;
+    if (buf.length < expectedSize) {
+        throw new Error(
+            `Payload too short for ${recordsCount} records: expected ${expectedSize} bytes, got ${buf.length}`,
+        );
     }
 
-    // Fill values
-    for (const item of count) {
-        const entry = result.get(item.ts);
-        if (entry) {
-            entry.count = item.value;
-        }
-    }
-    for (const item of countMax) {
-        const entry = result.get(item.ts);
-        if (entry) {
-            entry.countMax = item.value;
-        }
-    }
-    for (const item of countMin) {
-        const entry = result.get(item.ts);
-        if (entry) {
-            entry.countMin = item.value;
-        }
+    const records: RawSensorRecord[] = [];
+    for (let i = 0; i < recordsCount; i++) {
+        const off = HEADER_SIZE + i * RECORD_SIZE;
+        records.push({
+            timestamp: buf.readUInt32LE(off),
+            voltage: buf.readUInt16LE(off + 4),
+            temperature: buf.readInt16LE(off + 6),
+            humidity: buf.readUInt16LE(off + 8),
+            angle: buf.readUInt16LE(off + 10),
+            countAvg: buf.readUInt16LE(off + 12),
+            countMin: buf.readUInt16LE(off + 14),
+            countMax: buf.readUInt16LE(off + 16),
+        });
     }
 
-    return result;
+    return {
+        header: { uid, ts, ticks, tamper, recordsCount },
+        records,
+    };
 }

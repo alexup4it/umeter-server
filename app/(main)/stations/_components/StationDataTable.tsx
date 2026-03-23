@@ -9,7 +9,21 @@ function formatDate(dateString: string | null | undefined): string {
         return '-';
     }
 
-    return new Date(dateString).toLocaleString();
+    const d = new Date(dateString);
+    const year = d.getUTCFullYear();
+    const month = (d.getUTCMonth() + 1)
+        .toString()
+        .padStart(2, '0');
+    const day = d.getUTCDate().toString().padStart(2, '0');
+    const hours = d.getUTCHours().toString().padStart(2, '0');
+    const minutes = d.getUTCMinutes()
+        .toString()
+        .padStart(2, '0');
+    const seconds = d.getUTCSeconds()
+        .toString()
+        .padStart(2, '0');
+
+    return `${month}/${day}/${year}, ${hours}:${minutes}:${seconds} UTC`;
 }
 
 interface DataRow {
@@ -62,20 +76,15 @@ export function StationDataTable({ detail }: {
             ts: latestCount?.ts,
         },
         {
-            label: 'Battery',
-            value: detail.bat != null
-                ? `${detail.bat} mV`
+            label: 'Voltage',
+            value: detail.voltage != null
+                ? `${detail.voltage.toFixed(2)} V`
                 : '-',
-            ts: detail.lastSeen,
+            ts: latestCount?.ts ?? latestTemp?.ts,
         },
         {
             label: 'Ticks',
             value: detail.ticks ?? '-',
-            ts: detail.lastSeen,
-        },
-        {
-            label: 'Distance',
-            value: detail.dist ?? '-',
             ts: detail.lastSeen,
         },
         {

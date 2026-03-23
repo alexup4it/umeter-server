@@ -13,7 +13,16 @@ export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ uid: string }> },
 ) {
-    const { uid } = await params;
+    const { uid: uidParam } = await params;
+    const uid = Number(uidParam);
+
+    if (Number.isNaN(uid)) {
+        return NextResponse.json(
+            { error: 'Invalid uid' },
+            { status: 400 },
+        );
+    }
+
     const searchParams = request.nextUrl.searchParams;
 
     const fromParam = searchParams.get('from');

@@ -17,15 +17,31 @@ function computeDefaultRange(): [Date, Date] {
     return [new Date(now - ONE_WEEK_MS), new Date(now)];
 }
 
+const INITIAL_RANGE: [null, null] = [null, null];
+
+const SHORT_MONTHS = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+] as const;
+
 function formatDate(dateString: string): string {
     const date = new Date(dateString);
-    const month = date.toLocaleString(
-        'default',
-        { month: 'short' },
-    );
-    const day = date.getDate();
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes()
+    const month = SHORT_MONTHS[date.getUTCMonth()];
+    const day = date.getUTCDate();
+    const hours = date.getUTCHours()
+        .toString()
+        .padStart(2, '0');
+    const minutes = date.getUTCMinutes()
         .toString()
         .padStart(2, '0');
 
@@ -56,7 +72,7 @@ export function StationCharts({
 }: StationChartsProps) {
     const [dateRange, setDateRange] = useState<
         [Date | null, Date | null]
-    >(computeDefaultRange);
+    >(INITIAL_RANGE);
 
     const [temperature, setTemperature] = useState(initTemp);
     const [humidity, setHumidity] = useState(initHum);
@@ -68,6 +84,17 @@ export function StationCharts({
     useEffect(() => {
         dateRangeRef.current = dateRange;
     }, [dateRange]);
+
+    // Set default date range on client only to avoid hydration mismatch
+    useEffect(() => {
+        const id = requestAnimationFrame(() => {
+            setDateRange(computeDefaultRange());
+        });
+
+        return () => {
+            cancelAnimationFrame(id);
+        };
+    }, []);
 
     const fetchData = useCallback(
         async (

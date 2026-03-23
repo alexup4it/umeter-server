@@ -1,5 +1,5 @@
 export interface StationSummary {
-    uid: string;
+    uid: number;
     name: string | null;
     lat: number | null;
     lng: number | null;
@@ -8,7 +8,7 @@ export interface StationSummary {
     humidity: number | null;
     angle: number | null;
     count: number | null;
-    bat: number | null;
+    voltage: number | null;
 }
 
 export interface SensorPoint {
@@ -24,13 +24,12 @@ export interface CounterPoint {
 }
 
 export interface StationDetail {
-    uid: string;
+    uid: number;
     name: string | null;
     lat: number | null;
     lng: number | null;
-    bat: number | null;
+    voltage: number | null;
     ticks: number | null;
-    dist: number | null;
     tamper: boolean | null;
     lastSeen: string | null;
     info: StationInfo | null;

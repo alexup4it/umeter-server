@@ -3,7 +3,12 @@ import '@mantine/notifications/styles.css';
 
 import { JetBrains_Mono } from 'next/font/google';
 
-import { createTheme, MantineProvider } from '@mantine/core';
+import {
+    ColorSchemeScript,
+    createTheme,
+    mantineHtmlProps,
+    MantineProvider,
+} from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 
 const jetbrainsMono = JetBrains_Mono({
@@ -31,9 +36,11 @@ export default function ConfiguratorRootLayout({
         <html
             className={ jetbrainsMono.variable }
             lang="en"
-            data-mantine-color-scheme="dark"
+            { ...mantineHtmlProps }
         >
-            <head />
+            <head>
+                <ColorSchemeScript defaultColorScheme="dark" />
+            </head>
             <body>
                 <MantineProvider
                     theme={ theme }

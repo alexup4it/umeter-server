@@ -5,10 +5,33 @@ import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import Link from 'next/link';
 
-import { Group, Text, Stack } from '@mantine/core';
+import { Group, SimpleGrid, Text } from '@mantine/core';
 import L from 'leaflet';
 
 import type { StationSummary } from '@/lib/types/station';
+
+const COMPASS = [
+    'N',
+    'NNE',
+    'NE',
+    'ENE',
+    'E',
+    'ESE',
+    'SE',
+    'SSE',
+    'S',
+    'SSW',
+    'SW',
+    'WSW',
+    'W',
+    'WNW',
+    'NW',
+    'NNW',
+] as const;
+
+function degToCompass(deg: number): string {
+    return COMPASS[Math.round(deg / 22.5) % 16];
+}
 
 // Fix Leaflet default icon paths in Next.js
 // using unpkg CDN since Leaflet looks for images relative to CSS path by default
@@ -68,28 +91,62 @@ export default function StationsMap({ stations }: StationsMapProps) {
                         position={ [station.lat ?? 0, station.lng ?? 0] }
                     >
                         <Popup>
-                            <Stack gap="xs" style={ { minWidth: 150 } }>
-                                <Text fw={ 600 } size="sm">
-                                    <Link
-                                        href={ `/stations/${station.uid}` }
-                                        style={ { color: 'inherit', textDecoration: 'none' } }
-                                    >
-                                        { station.name ?? station.uid }
-                                    </Link>
-                                </Text>
-                                <Group justify="space-between">
-                                    <Text size="xs" c="dimmed">Temp:</Text>
-                                    <Text size="xs" fw={ 500 }>
-                                        { station.temperature != null ? `${station.temperature.toFixed(1)}°C` : '--' }
+                            <div style={ { minWidth: 160 } }>
+                                <Group justify="space-between" gap={ 4 } mb={ 4 }>
+                                    <Text fw={ 600 } size="sm" style={ { lineHeight: 1.2 } }>
+                                        <Link
+                                            href={ `/stations/${station.uid}` }
+                                            style={ { color: 'inherit', textDecoration: 'none' } }
+                                        >
+                                            { station.name ?? station.uid }
+                                        </Link>
+                                    </Text>
+                                    <Text size="xs" c="dimmed" style={ { lineHeight: 1.2 } }>
+                                        { station.voltage != null ? `${station.voltage.toFixed(2)}v` : '' }
                                     </Text>
                                 </Group>
-                                <Group justify="space-between">
-                                    <Text size="xs" c="dimmed">Humidity:</Text>
-                                    <Text size="xs" fw={ 500 }>
-                                        { station.humidity != null ? `${station.humidity.toFixed(1)}%` : '--' }
-                                    </Text>
-                                </Group>
-                            </Stack>
+                                <SimpleGrid cols={ 2 } spacing={ 4 } verticalSpacing={ 2 }>
+                                    <div>
+                                        <Text size="xs" c="dimmed" lh={ 1.2 }>Temp</Text>
+                                        <Text size="xs" fw={ 500 } lh={ 1.3 }>
+                                            { station.temperature != null ? `${station.temperature.toFixed(1)}°C` : '--' }
+                                        </Text>
+                                    </div>
+                                    <div>
+                                        <Text size="xs" c="dimmed" lh={ 1.2 }>Humidity</Text>
+                                        <Text size="xs" fw={ 500 } lh={ 1.3 }>
+                                            { station.humidity != null ? `${station.humidity.toFixed(1)}%` : '--' }
+                                        </Text>
+                                    </div>
+                                    <div>
+                                        <Text size="xs" c="dimmed" lh={ 1.2 }>Wind</Text>
+                                        <Text size="xs" fw={ 500 } lh={ 1.3 }>
+                                            { station.count != null ? `${station.count}` : '--' }
+                                        </Text>
+                                    </div>
+                                    <div>
+                                        <Text size="xs" c="dimmed" lh={ 1.2 }>Direction</Text>
+                                        <Text size="xs" fw={ 500 } lh={ 1.3 }>
+                                            { station.angle != null
+                                                ? (
+                                                    <span title={ `${station.angle.toFixed(1)}°` }>
+                                                        { degToCompass(station.angle) }
+                                                        { ' ' }
+                                                        <span
+                                                            style={ {
+                                                                display: 'inline-block',
+                                                                transform: `rotate(${station.angle}deg)`,
+                                                            } }
+                                                        >
+                                                            ↑
+                                                        </span>
+                                                    </span>
+                                                )
+                                                : '--' }
+                                        </Text>
+                                    </div>
+                                </SimpleGrid>
+                            </div>
                         </Popup>
                     </Marker>
                 )) }

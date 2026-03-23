@@ -3,6 +3,7 @@ import { Container, Stack, Title } from '@mantine/core';
 import { fetchStationSummaries } from '@/lib/data/stations';
 
 import { StationsDashboard } from './_components/StationsDashboard';
+import { StationsMapLoader } from './_components/StationsMapLoader';
 
 export const revalidate = 0;
 
@@ -16,6 +17,7 @@ export default async function WeatherStationsPage() {
 
                 <StationsDashboard
                     initialStations={ stations }
+                    map={ <StationsMapLoader stations={ stations } /> }
                 />
             </Stack>
         </Container>

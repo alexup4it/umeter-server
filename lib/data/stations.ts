@@ -23,7 +23,7 @@ export async function fetchStationSummaries(): Promise<
 
     const uids = recentStatuses
         .map((status) => status.uid)
-        .filter((uid): uid is string => uid !== null);
+        .filter((uid): uid is number => uid !== null);
 
     if (uids.length === 0) {
         return [];
@@ -31,33 +31,17 @@ export async function fetchStationSummaries(): Promise<
 
     return Promise.all(
         uids.map(async (uid) => {
-            const [info, status, cnet, temp, hum, angleRec, counter] =
+            const [info, cnet, latestRecord] =
                 await Promise.all([
                     prisma.info.findFirst({
                         where: { uid },
                         orderBy: { created: 'desc' },
                     }),
-                    prisma.status.findFirst({
-                        where: { uid, ts: { gte: weekAgo } },
-                        orderBy: { ts: 'desc' },
-                    }),
                     prisma.cnet.findFirst({
                         where: { uid, lat: { not: null } },
                         orderBy: { ts: 'desc' },
                     }),
-                    prisma.temperature.findFirst({
-                        where: { uid, ts: { gte: weekAgo } },
-                        orderBy: { ts: 'desc' },
-                    }),
-                    prisma.humidity.findFirst({
-                        where: { uid, ts: { gte: weekAgo } },
-                        orderBy: { ts: 'desc' },
-                    }),
-                    prisma.angle.findFirst({
-                        where: { uid, ts: { gte: weekAgo } },
-                        orderBy: { ts: 'desc' },
-                    }),
-                    prisma.counter.findFirst({
+                    prisma.sensorRecord.findFirst({
                         where: { uid, ts: { gte: weekAgo } },
                         orderBy: { ts: 'desc' },
                     }),
@@ -68,14 +52,12 @@ export async function fetchStationSummaries(): Promise<
                 name: info?.name ?? null,
                 lat: info?.lat ?? cnet?.lat ?? null,
                 lng: info?.lng ?? cnet?.lng ?? null,
-                lastSeen: status?.ts?.toISOString() ?? null,
-                temperature: temp?.temp ?? null,
-                humidity: hum?.hum ?? null,
-                angle: angleRec?.angle ?? null,
-                count: counter?.count != null
-                    ? Number(counter.count)
-                    : null,
-                bat: status?.bat ?? null,
+                lastSeen: latestRecord?.ts?.toISOString() ?? null,
+                temperature: latestRecord?.temperature ?? null,
+                humidity: latestRecord?.humidity ?? null,
+                angle: latestRecord?.angle ?? null,
+                count: latestRecord?.countAvg ?? null,
+                voltage: latestRecord?.voltage ?? null,
             };
         }),
     );
@@ -86,7 +68,7 @@ export async function fetchStationSummaries(): Promise<
  * Returns null if station not found.
  */
 export async function fetchStationDetail(
-    uid: string,
+    uid: number,
     from?: Date,
     to?: Date,
 ): Promise<StationDetail | null> {
@@ -97,7 +79,7 @@ export async function fetchStationDetail(
     const dateTo = to ?? now;
     const dateFilter = { gte: dateFrom, lte: dateTo };
 
-    const [info, status, cnet, temperature, humidity, angle, counter] =
+    const [info, status, cnet, records] =
         await Promise.all([
             prisma.info.findFirst({
                 where: { uid },
@@ -111,19 +93,7 @@ export async function fetchStationDetail(
                 where: { uid },
                 orderBy: { ts: 'desc' },
             }),
-            prisma.temperature.findMany({
-                where: { uid, ts: dateFilter },
-                orderBy: { ts: 'asc' },
-            }),
-            prisma.humidity.findMany({
-                where: { uid, ts: dateFilter },
-                orderBy: { ts: 'asc' },
-            }),
-            prisma.angle.findMany({
-                where: { uid, ts: dateFilter },
-                orderBy: { ts: 'asc' },
-            }),
-            prisma.counter.findMany({
+            prisma.sensorRecord.findMany({
                 where: { uid, ts: dateFilter },
                 orderBy: { ts: 'asc' },
             }),
@@ -133,16 +103,20 @@ export async function fetchStationDetail(
         return null;
     }
 
+    // Latest record for voltage
+    const latestRecord = records.length > 0
+        ? records[records.length - 1]
+        : null;
+
     return {
         uid,
         name: info?.name ?? null,
         lat: info?.lat ?? cnet?.lat ?? null,
         lng: info?.lng ?? cnet?.lng ?? null,
-        bat: status?.bat ?? null,
+        voltage: latestRecord?.voltage ?? null,
         ticks: status?.ticks != null
             ? Number(status.ticks)
             : null,
-        dist: status?.dist ?? null,
         tamper: status?.tamper ?? null,
         lastSeen: status?.ts?.toISOString() ?? null,
         info: info
@@ -167,29 +141,23 @@ export async function fetchStationDetail(
                 lev: cnet.lev,
             }
             : null,
-        temperature: temperature.map((record) => ({
-            ts: record.ts?.toISOString() ?? '',
-            value: record.temp ?? 0,
+        temperature: records.map((r) => ({
+            ts: r.ts?.toISOString() ?? '',
+            value: r.temperature ?? 0,
         })),
-        humidity: humidity.map((record) => ({
-            ts: record.ts?.toISOString() ?? '',
-            value: record.hum ?? 0,
+        humidity: records.map((r) => ({
+            ts: r.ts?.toISOString() ?? '',
+            value: r.humidity ?? 0,
         })),
-        angle: angle.map((record) => ({
-            ts: record.ts?.toISOString() ?? '',
-            value: record.angle ?? 0,
+        angle: records.map((r) => ({
+            ts: r.ts?.toISOString() ?? '',
+            value: r.angle ?? 0,
         })),
-        counter: counter.map((record) => ({
-            ts: record.ts?.toISOString() ?? '',
-            count: record.count != null
-                ? Number(record.count)
-                : null,
-            countMax: record.countMax != null
-                ? Number(record.countMax)
-                : null,
-            countMin: record.countMin != null
-                ? Number(record.countMin)
-                : null,
+        counter: records.map((r) => ({
+            ts: r.ts?.toISOString() ?? '',
+            count: r.countAvg,
+            countMax: r.countMax,
+            countMin: r.countMin,
         })),
     };
 }

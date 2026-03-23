@@ -112,9 +112,9 @@ export function StationCard({ station }: StationCardProps) {
 
                 <Paper withBorder p="xs" style={ { gridColumn: 'span 2' } }>
                     <Group justify="space-between">
-                        <Text size="xs" c="dimmed">Battery</Text>
+                        <Text size="xs" c="dimmed">Voltage</Text>
                         <Text fw={ 500 }>
-                            { station.bat != null ? `${station.bat} mV` : '--' }
+                            { station.voltage != null ? `${station.voltage.toFixed(2)} V` : '--' }
                         </Text>
                     </Group>
                 </Paper>

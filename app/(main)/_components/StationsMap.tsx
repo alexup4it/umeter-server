@@ -80,13 +80,13 @@ export default function StationsMap({ stations }: StationsMapProps) {
                                 <Group justify="space-between">
                                     <Text size="xs" c="dimmed">Temp:</Text>
                                     <Text size="xs" fw={ 500 }>
-                                        { station.temperature != null ? `${(station.temperature / 100).toFixed(1)}°C` : '--' }
+                                        { station.temperature != null ? `${station.temperature.toFixed(1)}°C` : '--' }
                                     </Text>
                                 </Group>
                                 <Group justify="space-between">
                                     <Text size="xs" c="dimmed">Humidity:</Text>
                                     <Text size="xs" fw={ 500 }>
-                                        { station.humidity != null ? `${(station.humidity / 100).toFixed(1)}%` : '--' }
+                                        { station.humidity != null ? `${station.humidity.toFixed(1)}%` : '--' }
                                     </Text>
                                 </Group>
                             </Stack>

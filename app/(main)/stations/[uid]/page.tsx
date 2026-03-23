@@ -1,10 +1,10 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-import { Button, Container, Group, Title } from '@mantine/core';
+import { Container, Group, Title } from '@mantine/core';
 
 import { fetchStationDetail } from '@/lib/data/stations';
 
+import { BackButton } from '../_components/BackButton';
 import { StationDetailView } from '../_components/StationDetailView';
 
 export default async function StationPage({
@@ -22,14 +22,7 @@ export default async function StationPage({
     return (
         <Container size="xl" py="xl">
             <Group mb="xl">
-                <Button
-                    component={ Link }
-                    href="/"
-                    variant="light"
-                    color="gray"
-                >
-                    Back
-                </Button>
+                <BackButton />
                 <Title order={ 2 }>
                     { detail.name
                         ? `${detail.name} (${uid})`

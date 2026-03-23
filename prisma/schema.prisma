@@ -50,7 +50,7 @@ model Temperature {
   created DateTime  @default(now())
   uid     String?   @db.VarChar(256)
   ts      DateTime?
-  temp    Int?
+  temp    Float?
 
   @@map("temperature")
 }
@@ -60,7 +60,7 @@ model Humidity {
   created DateTime  @default(now())
   uid     String?   @db.VarChar(256)
   ts      DateTime?
-  hum     Int?
+  hum     Float?
 
   @@map("humidity")
 }
@@ -70,7 +70,7 @@ model Angle {
   created DateTime  @default(now())
   uid     String?   @db.VarChar(256)
   ts      DateTime?
-  angle   Int?
+  angle   Float?
 
   @@map("angle")
 }
@@ -97,6 +97,8 @@ model Cnet {
   lac     Int?
   cid     Int?
   lev     Int?
+  lat     Float?
+  lng     Float?
 
   @@map("cnet")
 }

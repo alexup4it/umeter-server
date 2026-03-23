@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const infoPayloadSchema = z.object({
-    uid: z.string().nullable().optional().default(null),
+    uid: z.coerce.string().nullable().optional().default(null),
     ts: z.number().default(0),
     name: z.string().nullable().optional().default(null),
     bl_git: z.string().nullable().optional().default(null),
@@ -20,7 +20,7 @@ export const infoPayloadSchema = z.object({
 });
 
 export const cnetPayloadSchema = z.object({
-    uid: z.string().nullable().optional().default(null),
+    uid: z.coerce.string().nullable().optional().default(null),
     ts: z.number().default(0),
     mcc: z.number().nullable().optional().default(null),
     mnc: z.number().nullable().optional().default(null),
@@ -30,7 +30,7 @@ export const cnetPayloadSchema = z.object({
 });
 
 export const dataPayloadSchema = z.object({
-    uid: z.string().nullable().optional().default(null),
+    uid: z.coerce.string().nullable().optional().default(null),
     ts: z.number().default(0),
     ticks: z.number().nullable().optional().default(null),
     bat: z.number().nullable().optional().default(null),
@@ -41,5 +41,5 @@ export const dataPayloadSchema = z.object({
     count_max: z.string().nullable().optional().default(null),
     count_min: z.string().nullable().optional().default(null),
     dist: z.number().nullable().optional().default(null),
-    tamper: z.boolean().nullable().optional().default(null),
+    tamper: z.coerce.boolean().nullable().optional().default(null),
 });

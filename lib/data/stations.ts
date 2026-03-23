@@ -31,7 +31,7 @@ export async function fetchStationSummaries(): Promise<
 
     return Promise.all(
         uids.map(async (uid) => {
-            const [info, status, temp, hum, angleRec, counter] =
+            const [info, status, cnet, temp, hum, angleRec, counter] =
                 await Promise.all([
                     prisma.info.findFirst({
                         where: { uid },
@@ -39,6 +39,10 @@ export async function fetchStationSummaries(): Promise<
                     }),
                     prisma.status.findFirst({
                         where: { uid, ts: { gte: weekAgo } },
+                        orderBy: { ts: 'desc' },
+                    }),
+                    prisma.cnet.findFirst({
+                        where: { uid, lat: { not: null } },
                         orderBy: { ts: 'desc' },
                     }),
                     prisma.temperature.findFirst({
@@ -62,8 +66,8 @@ export async function fetchStationSummaries(): Promise<
             return {
                 uid,
                 name: info?.name ?? null,
-                lat: info?.lat ?? null,
-                lng: info?.lng ?? null,
+                lat: info?.lat ?? cnet?.lat ?? null,
+                lng: info?.lng ?? cnet?.lng ?? null,
                 lastSeen: status?.ts?.toISOString() ?? null,
                 temperature: temp?.temp ?? null,
                 humidity: hum?.hum ?? null,
@@ -132,8 +136,8 @@ export async function fetchStationDetail(
     return {
         uid,
         name: info?.name ?? null,
-        lat: info?.lat ?? null,
-        lng: info?.lng ?? null,
+        lat: info?.lat ?? cnet?.lat ?? null,
+        lng: info?.lng ?? cnet?.lng ?? null,
         bat: status?.bat ?? null,
         ticks: status?.ticks != null
             ? Number(status.ticks)

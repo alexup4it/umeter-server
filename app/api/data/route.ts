@@ -22,6 +22,7 @@ async function handleRequest(request: NextRequest) {
         return new NextResponse('Invalid HMAC', { status: 401 });
     }
 
+    console.log(`Received data payload: ${body}`);
     const payload = dataPayloadSchema.parse(JSON.parse(body));
 
     // Decode base64 encoded arrays
@@ -53,7 +54,7 @@ async function handleRequest(request: NextRequest) {
             data: temp.map((item) => ({
                 uid: payload.uid,
                 ts: unixToDate(item.ts),
-                temp: item.value,
+                temp: item.value / 1000,
             })),
         });
     }
@@ -64,7 +65,7 @@ async function handleRequest(request: NextRequest) {
             data: hum.map((item) => ({
                 uid: payload.uid,
                 ts: unixToDate(item.ts),
-                hum: item.value,
+                hum: item.value / 1000,
             })),
         });
     }
@@ -75,7 +76,7 @@ async function handleRequest(request: NextRequest) {
             data: angle.map((item) => ({
                 uid: payload.uid,
                 ts: unixToDate(item.ts),
-                angle: item.value,
+                angle: item.value / 1000,
             })),
         });
     }

@@ -38,21 +38,21 @@ export function StationDataTable({ detail }: {
         {
             label: 'Temperature',
             value: latestTemp
-                ? `${(latestTemp.value / 100).toFixed(1)} °C`
+                ? `${latestTemp.value.toFixed(1)} °C`
                 : '-',
             ts: latestTemp?.ts,
         },
         {
             label: 'Humidity',
             value: latestHum
-                ? `${(latestHum.value / 100).toFixed(1)} %`
+                ? `${latestHum.value.toFixed(1)} %`
                 : '-',
             ts: latestHum?.ts,
         },
         {
             label: 'Angle',
             value: latestAngle
-                ? `${latestAngle.value}°`
+                ? `${latestAngle.value.toFixed(1)}°`
                 : '-',
             ts: latestAngle?.ts,
         },

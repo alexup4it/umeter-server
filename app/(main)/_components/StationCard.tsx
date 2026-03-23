@@ -85,21 +85,21 @@ export function StationCard({ station }: StationCardProps) {
                 <Paper withBorder p="xs">
                     <Text size="xs" c="dimmed">Temp</Text>
                     <Text fw={ 500 }>
-                        { station.temperature != null ? `${(station.temperature / 100).toFixed(1)}°C` : '--' }
+                        { station.temperature != null ? `${station.temperature.toFixed(1)}°C` : '--' }
                     </Text>
                 </Paper>
 
                 <Paper withBorder p="xs">
                     <Text size="xs" c="dimmed">Humidity</Text>
                     <Text fw={ 500 }>
-                        { station.humidity != null ? `${(station.humidity / 100).toFixed(1)}%` : '--' }
+                        { station.humidity != null ? `${station.humidity.toFixed(1)}%` : '--' }
                     </Text>
                 </Paper>
 
                 <Paper withBorder p="xs">
                     <Text size="xs" c="dimmed">Angle</Text>
                     <Text fw={ 500 }>
-                        { station.angle != null ? `${station.angle}°` : '--' }
+                        { station.angle != null ? `${station.angle.toFixed(1)}°` : '--' }
                     </Text>
                 </Paper>
 

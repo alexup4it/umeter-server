@@ -156,12 +156,12 @@ export function StationCharts({
 
     const tempChartData = temperature.map((pt) => ({
         date: formatDate(pt.ts),
-        temperature: pt.value / 100,
+        temperature: pt.value,
     }));
 
     const humChartData = humidity.map((pt) => ({
         date: formatDate(pt.ts),
-        humidity: pt.value / 100,
+        humidity: pt.value,
     }));
 
     const angleChartData = angle.map((pt) => ({

@@ -4,6 +4,7 @@ import prisma from '@/lib/prisma';
 import { cnetPayloadSchema } from '@/lib/schemas';
 import { unixToDate } from '@/lib/utils/date';
 import { hmacBase64, verifyHmac } from '@/lib/utils/hmac';
+import { lookupCellLocation } from '@/lib/utils/opencellid';
 
 export async function GET(request: NextRequest) {
     return handleRequest(request);
@@ -23,7 +24,7 @@ async function handleRequest(request: NextRequest) {
 
     const payload = cnetPayloadSchema.parse(JSON.parse(body));
 
-    await prisma.cnet.create({
+    const record = await prisma.cnet.create({
         data: {
             uid: payload.uid,
             ts: payload.ts ? unixToDate(payload.ts) : null,
@@ -34,6 +35,26 @@ async function handleRequest(request: NextRequest) {
             lev: payload.lev,
         },
     });
+
+    // Resolve cell tower location in background — don't block response to device
+    if (payload.mcc != null && payload.mnc != null
+        && payload.lac != null && payload.cid != null) {
+        void lookupCellLocation(
+            payload.mcc,
+            payload.mnc,
+            payload.lac,
+            payload.cid,
+        ).then((location) => {
+            if (location) {
+                return prisma.cnet.update({
+                    where: { id: record.id },
+                    data: { lat: location.lat, lng: location.lng },
+                });
+            }
+        }).catch((error: unknown) => {
+            console.error('Cell location resolution failed:', error);
+        });
+    }
 
     const responseBody = JSON.stringify({ status: 'ok' });
     const response = NextResponse.json({ status: 'ok' });

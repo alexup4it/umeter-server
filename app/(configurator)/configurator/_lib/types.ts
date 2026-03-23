@@ -2,9 +2,12 @@ export const RESPONSE_PREFIX = '@,,';
 
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected';
 
+export type LogLevel = 'E' | 'I' | 'W';
+
 export interface LogEntry {
     id: number;
     timestamp: Date;
+    level: LogLevel | null;
     tag: string;
     ticks: string;
     payload: string;

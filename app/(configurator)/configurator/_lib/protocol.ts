@@ -1,5 +1,6 @@
 import {
     type LogEntry,
+    type LogLevel,
     type ProtocolResponse,
     type ReadableParamName,
     RESPONSE_PREFIX,
@@ -7,6 +8,8 @@ import {
 } from './types';
 
 let logIdCounter = 0;
+
+const VALID_LEVELS = new Set<string>(['I', 'W', 'E']);
 
 export function buildIfaceCommand(): string {
     return JSON.stringify({ cmd: 'iface' });
@@ -31,6 +34,26 @@ export function buildResetCommand(): string {
     return JSON.stringify({ cmd: 'reset' });
 }
 
+/**
+ * Parse the level/tag prefix from a log line.
+ * New format: "L/TAG,..." where L is I, W, or E.
+ * Legacy format: "TAG,..." (no level prefix).
+ */
+function parseLevelTag(raw: string): { level: LogLevel | null; tag: string } {
+    if (
+        raw.length >= 2
+        && raw[1] === '/'
+        && VALID_LEVELS.has(raw[0])
+    ) {
+        return {
+            level: raw[0] as LogLevel,
+            tag: raw.slice(2),
+        };
+    }
+
+    return { level: null, tag: raw };
+}
+
 export function parseLine(
     raw: string,
 ): { type: 'response'; data: ProtocolResponse } | { type: 'log'; data: LogEntry } | null {
@@ -50,17 +73,20 @@ export function parseLine(
         }
     }
 
-    // Parse log line: TAG,TICKS,PAYLOAD
+    // Parse log line: [L/]TAG,TICKS,PAYLOAD
     const firstComma = trimmed.indexOf(',');
     if (firstComma === -1) {
         logIdCounter += 1;
+
+        const { level, tag } = parseLevelTag(trimmed);
 
         return {
             type: 'log',
             data: {
                 id: logIdCounter,
                 timestamp: new Date(),
-                tag: '',
+                level,
+                tag: tag || trimmed,
                 ticks: '',
                 payload: trimmed,
                 raw: trimmed,
@@ -68,7 +94,8 @@ export function parseLine(
         };
     }
 
-    const tag = trimmed.slice(0, firstComma);
+    const rawTag = trimmed.slice(0, firstComma);
+    const { level, tag } = parseLevelTag(rawTag);
     const rest = trimmed.slice(firstComma + 1);
     const secondComma = rest.indexOf(',');
 
@@ -90,6 +117,7 @@ export function parseLine(
         data: {
             id: logIdCounter,
             timestamp: new Date(),
+            level,
             tag,
             ticks,
             payload,

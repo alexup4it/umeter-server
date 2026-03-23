@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
     ActionIcon,
@@ -15,7 +15,7 @@ import {
     Tooltip,
 } from '@mantine/core';
 
-import type { LogEntry } from '../_lib/types';
+import type { LogEntry, LogLevel } from '../_lib/types';
 
 interface LogViewerProps {
     logs: LogEntry[];
@@ -26,6 +26,20 @@ function formatTime(date: Date): string {
     return date.toLocaleTimeString('en-US', { hour12: false });
 }
 
+const LEVEL_COLORS: Record<LogLevel, string> = {
+    I: 'blue',
+    W: 'yellow',
+    E: 'red',
+};
+
+const LEVEL_LABELS: Record<LogLevel, string> = {
+    I: 'Info',
+    W: 'Warn',
+    E: 'Error',
+};
+
+const ALL_LEVELS: LogLevel[] = ['I', 'W', 'E'];
+
 const TAG_COLORS: Record<string, string> = {
     info: 'blue',
     warn: 'yellow',
@@ -33,13 +47,76 @@ const TAG_COLORS: Record<string, string> = {
     debug: 'gray',
 };
 
-function getTagColor(tag: string): string {
+function getTagColor(tag: string, level: LogLevel | null): string {
+    if (level) {
+        return LEVEL_COLORS[level];
+    }
+
     return TAG_COLORS[tag.toLowerCase()] ?? 'gray';
+}
+
+/**
+ * Render payload text with special characters highlighted.
+ * - `\\` → plain `\`
+ * - `\r` → highlighted `\r`
+ * - `\n` → highlighted `\n`
+ */
+function renderPayload(text: string): ReactNode[] {
+    const parts: ReactNode[] = [];
+    let index = 0;
+    let buffer = '';
+
+    function flushBuffer(): void {
+        if (buffer.length > 0) {
+            parts.push(buffer);
+            buffer = '';
+        }
+    }
+
+    while (index < text.length) {
+        if (text[index] === '\\' && index + 1 < text.length) {
+            const next = text[index + 1];
+
+            if (next === 'r' || next === 'n') {
+                flushBuffer();
+                parts.push(
+                    <Text
+                        key={ `esc-${String(index)}` }
+                        component="span"
+                        size="xs"
+                        ff="monospace"
+                        c="violet"
+                        style={ { opacity: 0.7 } }
+                    >
+                        { `\\${next}` }
+                    </Text>,
+                );
+                index += 2;
+                continue;
+            }
+
+            if (next === '\\') {
+                buffer += '\\';
+                index += 2;
+                continue;
+            }
+        }
+
+        buffer += text[index];
+        index += 1;
+    }
+
+    flushBuffer();
+
+    return parts;
 }
 
 export function LogViewer({ logs, onClear }: LogViewerProps) {
     const [autoScroll, setAutoScroll] = useState(true);
     const [excludedTags, setExcludedTags] = useState<Set<string>>(
+        new Set(),
+    );
+    const [excludedLevels, setExcludedLevels] = useState<Set<LogLevel>>(
         new Set(),
     );
     const viewportRef = useRef<HTMLDivElement>(null);
@@ -57,13 +134,34 @@ export function LogViewer({ logs, onClear }: LogViewerProps) {
     }, [logs]);
 
     const filteredLogs = useMemo(
-        () => excludedTags.size === 0
-            ? logs
-            : logs.filter(
-                (entry) => !excludedTags.has(entry.tag),
-            ),
-        [logs, excludedTags],
+        () => {
+            const hasTagFilter = excludedTags.size > 0;
+            const hasLevelFilter = excludedLevels.size > 0;
+
+            if (!hasTagFilter && !hasLevelFilter) {
+                return logs;
+            }
+
+            return logs.filter((entry) => {
+                if (hasTagFilter && excludedTags.has(entry.tag)) {
+                    return false;
+                }
+                if (
+                    hasLevelFilter
+                    && entry.level
+                    && excludedLevels.has(entry.level)
+                ) {
+                    return false;
+                }
+
+                return true;
+            });
+        },
+        [logs, excludedTags, excludedLevels],
     );
+
+    const isFiltered = excludedTags.size > 0
+        || excludedLevels.size > 0;
 
     function toggleTag(tag: string): void {
         setExcludedTags((prev) => {
@@ -73,6 +171,20 @@ export function LogViewer({ logs, onClear }: LogViewerProps) {
                 next.delete(tag);
             } else {
                 next.add(tag);
+            }
+
+            return next;
+        });
+    }
+
+    function toggleLevel(level: LogLevel): void {
+        setExcludedLevels((prev) => {
+            const next = new Set(prev);
+
+            if (next.has(level)) {
+                next.delete(level);
+            } else {
+                next.add(level);
             }
 
             return next;
@@ -104,7 +216,7 @@ export function LogViewer({ logs, onClear }: LogViewerProps) {
                             color="gray"
                         >
                             { filteredLogs.length }
-                            { excludedTags.size > 0
+                            { isFiltered
                                 && `/${logs.length}` }
                         </Badge>
                     </Group>
@@ -152,41 +264,80 @@ export function LogViewer({ logs, onClear }: LogViewerProps) {
                     </Group>
                 </Group>
 
-                { uniqueTags.length > 0 && (
-                    <Group gap={ 4 }>
-                        { uniqueTags.map((tag) => {
-                            const isExcluded = excludedTags.has(tag);
+                <Group gap={ 8 }>
+                    { ALL_LEVELS.map((level) => {
+                        const isExcluded = excludedLevels.has(level);
 
-                            return (
-                                <Badge
-                                    key={ tag }
-                                    size="xs"
-                                    variant={
-                                        isExcluded
-                                            ? 'outline'
-                                            : 'light'
+                        return (
+                            <Badge
+                                key={ level }
+                                size="xs"
+                                variant={
+                                    isExcluded
+                                        ? 'outline'
+                                        : 'filled'
+                                }
+                                color={
+                                    LEVEL_COLORS[level]
+                                }
+                                style={ {
+                                    cursor: 'pointer',
+                                    opacity: isExcluded
+                                        ? 0.4
+                                        : 1,
+                                } }
+                                onClick={
+                                    () => {
+                                        toggleLevel(level);
                                     }
-                                    color={
-                                        getTagColor(tag)
-                                    }
-                                    style={ {
-                                        cursor: 'pointer',
-                                        opacity: isExcluded
-                                            ? 0.4
-                                            : 1,
-                                    } }
-                                    onClick={
-                                        () => {
-                                            toggleTag(tag);
+                                }
+                            >
+                                { LEVEL_LABELS[level] }
+                            </Badge>
+                        );
+                    }) }
+
+                    { uniqueTags.length > 0 && (
+                        <>
+                            <Text
+                                size="xs"
+                                c="dimmed"
+                                style={ { userSelect: 'none' } }
+                            >
+                                |
+                            </Text>
+                            { uniqueTags.map((tag) => {
+                                const isExcluded = excludedTags.has(tag);
+
+                                return (
+                                    <Badge
+                                        key={ tag }
+                                        size="xs"
+                                        variant={
+                                            isExcluded
+                                                ? 'outline'
+                                                : 'light'
                                         }
-                                    }
-                                >
-                                    { tag }
-                                </Badge>
-                            );
-                        }) }
-                    </Group>
-                ) }
+                                        color="gray"
+                                        style={ {
+                                            cursor: 'pointer',
+                                            opacity: isExcluded
+                                                ? 0.4
+                                                : 1,
+                                        } }
+                                        onClick={
+                                            () => {
+                                                toggleTag(tag);
+                                            }
+                                        }
+                                    >
+                                        { tag }
+                                    </Badge>
+                                );
+                            }) }
+                        </>
+                    ) }
+                </Group>
 
                 <ScrollArea
                     viewportRef={ viewportRef }
@@ -232,6 +383,23 @@ export function LogViewer({ logs, onClear }: LogViewerProps) {
                                             entry.timestamp,
                                         ) }
                                     </Text>
+                                    { entry.level && (
+                                        <Badge
+                                            size="xs"
+                                            variant="filled"
+                                            color={
+                                                LEVEL_COLORS[
+                                                    entry.level
+                                                ]
+                                            }
+                                            style={ {
+                                                flexShrink: 0,
+                                                minWidth: 14,
+                                            } }
+                                        >
+                                            { entry.level }
+                                        </Badge>
+                                    ) }
                                     { entry.tag && (
                                         <Badge
                                             size="xs"
@@ -239,6 +407,7 @@ export function LogViewer({ logs, onClear }: LogViewerProps) {
                                             color={
                                                 getTagColor(
                                                     entry.tag,
+                                                    entry.level,
                                                 )
                                             }
                                             style={ {
@@ -251,12 +420,16 @@ export function LogViewer({ logs, onClear }: LogViewerProps) {
                                     <Text
                                         size="xs"
                                         ff="monospace"
+                                        component="span"
                                         style={ {
                                             wordBreak: 'break-all',
                                             lineHeight: 1.4,
                                         } }
                                     >
-                                        { entry.payload || entry.raw }
+                                        { renderPayload(
+                                            entry.payload
+                                            || entry.raw,
+                                        ) }
                                     </Text>
                                 </Group>
                             ))

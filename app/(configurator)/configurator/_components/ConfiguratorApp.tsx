@@ -92,6 +92,33 @@ export function ConfiguratorApp() {
         };
     }, [getSerial, handleResponse, handleLog, handleConnectionChange]);
 
+    // Auto-connect to last used port on mount
+    useEffect(() => {
+        void (async () => {
+            const serial = getSerial();
+            const connected = await serial.autoConnect();
+
+            if (connected) {
+                try {
+                    const ifaceResponse =
+                        await sendCommand(buildIfaceCommand());
+
+                    if (ifaceResponse.status !== 'ok') {
+                        notifications.show({
+                            title: 'Warning',
+                            message:
+                                'Device responded with error',
+                            color: 'yellow',
+                        });
+                    }
+                } catch {
+                    // iface check failed — still connected
+                }
+            }
+        })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount only
+    }, []);
+
     const sendCommand = useCallback(
         async (command: string): Promise<ProtocolResponse> => {
             const serial = getSerial();

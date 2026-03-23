@@ -36,6 +36,9 @@ export class SerialConnection {
         this._onStatusChange = handler;
     }
 
+    /**
+     * Connect by requesting a port from the user (requires gesture).
+     */
     async connect(): Promise<void> {
         if (this._port) {
             return;
@@ -45,20 +48,41 @@ export class SerialConnection {
 
         try {
             const port = await navigator.serial.requestPort();
-            await port.open({ baudRate: 115200 });
-
-            this._port = port;
-
-            if (port.writable) {
-                this._writer = port.writable.getWriter();
-            }
-
-            this._setStatus('connected');
-            this._startReadLoop();
+            await this._openPort(port);
         } catch {
             this._setStatus('disconnected');
 
             throw new Error('Failed to connect to serial port');
+        }
+    }
+
+    /**
+     * Auto-connect to the last used port without user gesture.
+     * Uses navigator.serial.getPorts() which returns previously
+     * granted ports. Returns true if connected, false otherwise.
+     */
+    async autoConnect(): Promise<boolean> {
+        if (this._port) {
+            return true;
+        }
+
+        try {
+            const ports = await navigator.serial.getPorts();
+            if (ports.length === 0) {
+                return false;
+            }
+
+            // Use the last port (most recently granted)
+            const port = ports[ports.length - 1];
+
+            this._setStatus('connecting');
+            await this._openPort(port);
+
+            return true;
+        } catch {
+            this._setStatus('disconnected');
+
+            return false;
         }
     }
 
@@ -99,6 +123,19 @@ export class SerialConnection {
 
         const encoded = this._encoder.encode(data);
         await this._writer.write(encoded);
+    }
+
+    private async _openPort(port: SerialPort): Promise<void> {
+        await port.open({ baudRate: 115200 });
+
+        this._port = port;
+
+        if (port.writable) {
+            this._writer = port.writable.getWriter();
+        }
+
+        this._setStatus('connected');
+        this._startReadLoop();
     }
 
     private _setStatus(status: ConnectionStatus): void {

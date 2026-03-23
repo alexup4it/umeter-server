@@ -34,6 +34,10 @@ export function buildResetCommand(): string {
     return JSON.stringify({ cmd: 'reset' });
 }
 
+export function buildMemCommand(): string {
+    return JSON.stringify({ cmd: 'mem' });
+}
+
 /**
  * Parse the level/tag prefix from a log line.
  * New format: "L/TAG,..." where L is I, W, or E.

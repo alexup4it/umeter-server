@@ -7,6 +7,7 @@ import { notifications } from '@mantine/notifications';
 
 import {
     buildIfaceCommand,
+    buildMemCommand,
     buildReadCommand,
     buildResetCommand,
     buildSaveCommand,
@@ -28,6 +29,7 @@ import { ConfigEditor } from './ConfigEditor';
 import { ConnectionPanel } from './ConnectionPanel';
 import { DeviceInfo } from './DeviceInfo';
 import { LogViewer } from './LogViewer';
+import { MemoryInfo } from './MemoryInfo';
 
 const MAX_LOG_ENTRIES = 1000;
 
@@ -290,6 +292,11 @@ export function ConfiguratorApp() {
         setLogs([]);
     }, []);
 
+    const fetchMemory = useCallback(
+        () => sendCommand(buildMemCommand()),
+        [sendCommand],
+    );
+
     const isConnected = connectionStatus === 'connected';
 
     return (
@@ -309,6 +316,10 @@ export function ConfiguratorApp() {
                                     loading={ loading }
                                     connected={ isConnected }
                                     onRefresh={ readAllParams }
+                                />
+                                <MemoryInfo
+                                    connected={ isConnected }
+                                    onFetch={ fetchMemory }
                                 />
                                 <ConfigEditor
                                     params={ deviceParams }

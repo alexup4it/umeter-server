@@ -121,6 +121,7 @@ export class SerialConnection {
             throw new Error('Not connected');
         }
 
+        console.debug('> %s', data);
         const encoded = this._encoder.encode(data);
         await this._writer.write(encoded);
     }

@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+
 import Link from 'next/link';
 
 import { ActionIcon, Badge, Group, Paper, SimpleGrid, Text, Tooltip } from '@mantine/core';
@@ -52,6 +54,10 @@ function getRelativeTime(lastSeen: string | null): string {
     return `${days} day${days > 1 ? 's' : ''} ago`;
 }
 
+/** SSR-safe defaults (stable across server & client first render). */
+const SSR_STATUS: { color: string; label: string } = { color: 'gray', label: 'Unknown' };
+const SSR_RELATIVE_TIME = '--';
+
 function MapPinIcon() {
     return (
         <svg
@@ -71,9 +77,25 @@ function MapPinIcon() {
     );
 }
 
+const LIVE_UPDATE_INTERVAL_MS = 30_000;
+
 export function StationCard({ station, onLocate }: StationCardProps) {
-    const status = getStatusInfo(station.lastSeen);
-    const lastSeenStr = getRelativeTime(station.lastSeen);
+    const [status, setStatus] = useState(SSR_STATUS);
+    const [lastSeenStr, setLastSeenStr] = useState(SSR_RELATIVE_TIME);
+
+    useEffect(() => {
+        const update = () => {
+            setStatus(getStatusInfo(station.lastSeen));
+            setLastSeenStr(getRelativeTime(station.lastSeen));
+        };
+
+        update();
+        const id = setInterval(update, LIVE_UPDATE_INTERVAL_MS);
+
+        return () => {
+            clearInterval(id);
+        };
+    }, [station.lastSeen]);
 
     return (
         <Paper

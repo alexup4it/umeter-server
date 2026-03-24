@@ -1,6 +1,13 @@
 'use client';
 
-import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import {
+    type ReactNode,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
 
 import {
     ActionIcon,
@@ -111,6 +118,10 @@ function renderPayload(text: string): ReactNode[] {
     return parts;
 }
 
+const ROW_HEIGHT = 26;
+const OVERSCAN = 20;
+const SCROLL_BOTTOM_THRESHOLD = 30;
+
 export function LogViewer({ logs, onClear }: LogViewerProps) {
     const [autoScroll, setAutoScroll] = useState(true);
     const [excludedTags, setExcludedTags] = useState<Set<string>>(
@@ -120,6 +131,9 @@ export function LogViewer({ logs, onClear }: LogViewerProps) {
         new Set(),
     );
     const viewportRef = useRef<HTMLDivElement>(null);
+    const isUserScrollRef = useRef(true);
+    const [scrollTop, setScrollTop] = useState(0);
+    const [viewportHeight, setViewportHeight] = useState(0);
 
     const uniqueTags = useMemo(() => {
         const tags = new Set<string>();
@@ -163,6 +177,28 @@ export function LogViewer({ logs, onClear }: LogViewerProps) {
     const isFiltered = excludedTags.size > 0
         || excludedLevels.size > 0;
 
+    // Virtualization: only render visible rows + overscan
+    const totalHeight = filteredLogs.length * ROW_HEIGHT;
+
+    const { startIndex, endIndex } = useMemo(() => {
+        const start = Math.max(
+            0,
+            Math.floor(scrollTop / ROW_HEIGHT) - OVERSCAN,
+        );
+        const visibleCount = Math.ceil(viewportHeight / ROW_HEIGHT);
+        const end = Math.min(
+            filteredLogs.length,
+            start + visibleCount + OVERSCAN * 2,
+        );
+
+        return { startIndex: start, endIndex: end };
+    }, [scrollTop, viewportHeight, filteredLogs.length]);
+
+    const visibleLogs = useMemo(
+        () => filteredLogs.slice(startIndex, endIndex),
+        [filteredLogs, startIndex, endIndex],
+    );
+
     function toggleTag(tag: string): void {
         setExcludedTags((prev) => {
             const next = new Set(prev);
@@ -191,14 +227,64 @@ export function LogViewer({ logs, onClear }: LogViewerProps) {
         });
     }
 
+    // Track scroll position for auto-scroll and virtualization
+    const handleScrollPositionChange = useCallback(
+        ({ y }: { x: number; y: number }) => {
+            setScrollTop(y);
+
+            if (!isUserScrollRef.current) {
+                isUserScrollRef.current = true;
+
+                return;
+            }
+
+            const viewport = viewportRef.current;
+
+            if (!viewport) {
+                return;
+            }
+
+            const distanceFromBottom = viewport.scrollHeight
+                - viewport.clientHeight
+                - y;
+            const isAtBottom = distanceFromBottom
+                <= SCROLL_BOTTOM_THRESHOLD;
+
+            setAutoScroll(isAtBottom);
+        },
+        [],
+    );
+
+    // Measure viewport height for virtualization
+    useEffect(() => {
+        const viewport = viewportRef.current;
+
+        if (!viewport) {
+            return;
+        }
+
+        const observer = new ResizeObserver(([entry]) => {
+            setViewportHeight(entry.contentRect.height);
+        });
+
+        observer.observe(viewport);
+        setViewportHeight(viewport.clientHeight);
+
+        return () => {
+            observer.disconnect();
+        };
+    }, []);
+
+    // Auto-scroll to bottom when new logs arrive
     useEffect(() => {
         if (autoScroll && viewportRef.current) {
+            isUserScrollRef.current = false;
             viewportRef.current.scrollTo({
                 top: viewportRef.current.scrollHeight,
                 behavior: 'smooth',
             });
         }
-    }, [filteredLogs, autoScroll]);
+    }, [filteredLogs.length, autoScroll]);
 
     return (
         <Paper
@@ -344,21 +430,29 @@ export function LogViewer({ logs, onClear }: LogViewerProps) {
                     style={ { flex: 1 } }
                     type="auto"
                     offsetScrollbars
+                    onScrollPositionChange={
+                        handleScrollPositionChange
+                    }
                 >
-                    <Box>
-                        { filteredLogs.length === 0 ? (
-                            <Text
-                                size="xs"
-                                c="dimmed"
-                                ta="center"
-                                pt="xl"
-                            >
-                                { logs.length === 0
-                                    ? 'No log entries yet. Connect to a device to see logs.'
-                                    : 'All entries filtered out.' }
-                            </Text>
-                        ) : (
-                            filteredLogs.map((entry) => (
+                    { filteredLogs.length === 0 ? (
+                        <Text
+                            size="xs"
+                            c="dimmed"
+                            ta="center"
+                            pt="xl"
+                        >
+                            { logs.length === 0
+                                ? 'No log entries yet. Connect to a device to see logs.'
+                                : 'All entries filtered out.' }
+                        </Text>
+                    ) : (
+                        <Box
+                            style={ {
+                                height: totalHeight,
+                                position: 'relative',
+                            } }
+                        >
+                            { visibleLogs.map((entry, i) => (
                                 <Group
                                     key={ entry.id }
                                     gap={ 6 }
@@ -367,7 +461,15 @@ export function LogViewer({ logs, onClear }: LogViewerProps) {
                                     style={ {
                                         borderBottom:
                                             '1px solid var(--mantine-color-dark-5)',
+                                        height: ROW_HEIGHT,
+                                        position: 'absolute',
+                                        top:
+                                            (startIndex + i)
+                                            * ROW_HEIGHT,
+                                        left: 0,
+                                        right: 0,
                                         padding: '2px 0',
+                                        overflow: 'hidden',
                                     } }
                                 >
                                     <Text
@@ -424,6 +526,10 @@ export function LogViewer({ logs, onClear }: LogViewerProps) {
                                         style={ {
                                             wordBreak: 'break-all',
                                             lineHeight: 1.4,
+                                            overflow: 'hidden',
+                                            textOverflow:
+                                                'ellipsis',
+                                            whiteSpace: 'nowrap',
                                         } }
                                     >
                                         { renderPayload(
@@ -432,9 +538,9 @@ export function LogViewer({ logs, onClear }: LogViewerProps) {
                                         ) }
                                     </Text>
                                 </Group>
-                            ))
-                        ) }
-                    </Box>
+                            )) }
+                        </Box>
+                    ) }
                 </ScrollArea>
             </Stack>
         </Paper>

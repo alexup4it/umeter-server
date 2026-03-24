@@ -21,8 +21,15 @@ const StationsMapLeaflet = dynamic(
 
 export function StationsMapLoader({
     stations,
+    onRegisterFlyTo,
 }: {
     stations: StationSummary[];
+    onRegisterFlyTo?: (fn: (uid: number) => void) => void;
 }) {
-    return <StationsMapLeaflet stations={ stations } />;
+    return (
+        <StationsMapLeaflet
+            stations={ stations }
+            onRegisterFlyTo={ onRegisterFlyTo }
+        />
+    );
 }

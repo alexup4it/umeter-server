@@ -1,6 +1,7 @@
 'use client';
 
-import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
+import { useEffect, useRef } from 'react';
+import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 
 import 'leaflet/dist/leaflet.css';
 import Link from 'next/link';
@@ -53,9 +54,43 @@ L.Marker.prototype.options.icon = DEFAULT_ICON;
 
 interface StationsMapProps {
     stations: StationSummary[];
+    onRegisterFlyTo?: (fn: (uid: number) => void) => void;
 }
 
-export default function StationsMap({ stations }: StationsMapProps) {
+function FlyToRegistrar({
+    stations,
+    onRegisterFlyTo,
+    markersRef,
+}: {
+    stations: StationSummary[];
+    onRegisterFlyTo: (fn: (uid: number) => void) => void;
+    markersRef: React.RefObject<Map<number, L.Marker>>;
+}) {
+    const map = useMap();
+
+    useEffect(() => {
+        onRegisterFlyTo((uid: number) => {
+            const station = stations.find((station) => station.uid === uid);
+            if (station?.lat == null || station.lng == null) {
+                return;
+            }
+
+            map.flyTo([station.lat, station.lng], 13, { duration: 1.2 });
+
+            // Open the marker popup after fly animation
+            setTimeout(() => {
+                const marker = markersRef.current.get(uid);
+                marker?.openPopup();
+            }, 1300);
+        });
+    }, [map, stations, onRegisterFlyTo, markersRef]);
+
+    return null;
+}
+
+export default function StationsMap({ stations, onRegisterFlyTo }: StationsMapProps) {
+    const markersRef = useRef<Map<number, L.Marker>>(new Map());
+
     const validStations = stations.filter(
         (item) => item.lat != null && item.lng != null && !isNaN(item.lat) && !isNaN(item.lng),
     );
@@ -85,9 +120,23 @@ export default function StationsMap({ stations }: StationsMapProps) {
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
+                { onRegisterFlyTo && (
+                    <FlyToRegistrar
+                        markersRef={ markersRef }
+                        stations={ stations }
+                        onRegisterFlyTo={ onRegisterFlyTo }
+                    />
+                ) }
                 { validStations.map((station) => (
                     <Marker
                         key={ station.uid }
+                        ref={ (ref) => {
+                            if (ref) {
+                                markersRef.current.set(station.uid, ref);
+                            } else {
+                                markersRef.current.delete(station.uid);
+                            }
+                        } }
                         position={ [station.lat ?? 0, station.lng ?? 0] }
                     >
                         <Popup>

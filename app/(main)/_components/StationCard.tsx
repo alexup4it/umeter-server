@@ -2,12 +2,13 @@
 
 import Link from 'next/link';
 
-import { Badge, Group, Paper, SimpleGrid, Text } from '@mantine/core';
+import { ActionIcon, Badge, Group, Paper, SimpleGrid, Text, Tooltip } from '@mantine/core';
 
 import type { StationSummary } from '@/lib/types/station';
 
 interface StationCardProps {
     station: StationSummary;
+    onLocate?: (uid: number) => void;
 }
 
 function getStatusInfo(lastSeen: string | null): { color: string; label: string } {
@@ -51,7 +52,26 @@ function getRelativeTime(lastSeen: string | null): string {
     return `${days} day${days > 1 ? 's' : ''} ago`;
 }
 
-export function StationCard({ station }: StationCardProps) {
+function MapPinIcon() {
+    return (
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        >
+            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+            <circle cx="12" cy="10" r="3" />
+        </svg>
+    );
+}
+
+export function StationCard({ station, onLocate }: StationCardProps) {
     const status = getStatusInfo(station.lastSeen);
     const lastSeenStr = getRelativeTime(station.lastSeen);
 
@@ -67,9 +87,26 @@ export function StationCard({ station }: StationCardProps) {
                 <Text fw={ 600 } size="lg" truncate>
                     { station.name ?? station.uid }
                 </Text>
-                <Badge color={ status.color } variant="dot">
-                    { status.label }
-                </Badge>
+                <Group gap="xs">
+                    { onLocate && (
+                        <Tooltip label="Show on map" withArrow>
+                            <ActionIcon
+                                variant="subtle"
+                                size="sm"
+                                onClick={ (event) => {
+                                    event.preventDefault();
+                                    event.stopPropagation();
+                                    onLocate(station.uid);
+                                } }
+                            >
+                                <MapPinIcon />
+                            </ActionIcon>
+                        </Tooltip>
+                    ) }
+                    <Badge color={ status.color } variant="dot">
+                        { status.label }
+                    </Badge>
+                </Group>
             </Group>
 
             <Group justify="space-between" mb="sm">

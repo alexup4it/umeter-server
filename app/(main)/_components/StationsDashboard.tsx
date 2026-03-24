@@ -1,25 +1,26 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { SimpleGrid, Text } from '@mantine/core';
 
 import type { StationSummary } from '@/lib/types/station';
 
 import { StationCard } from './StationCard';
+import { StationsMapLoader } from './StationsMapLoader';
 
 const POLL_INTERVAL_MS = 30_000;
 
 interface StationsDashboardProps {
     initialStations: StationSummary[];
-    map?: React.ReactNode;
 }
 
 export function StationsDashboard({
     initialStations,
-    map,
 }: StationsDashboardProps) {
     const [stations, setStations] = useState(initialStations);
+    const flyToRef = useRef<((uid: number) => void) | null>(null);
+    const mapContainerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -58,6 +59,24 @@ export function StationsDashboard({
         };
     }, []);
 
+    const handleRegisterFlyTo = useCallback(
+        (fn: (uid: number) => void) => {
+            flyToRef.current = fn;
+        },
+        [],
+    );
+
+    const handleLocate = useCallback((uid: number) => {
+        mapContainerRef.current?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+        });
+        // Small delay to allow scroll to finish before flying
+        setTimeout(() => {
+            flyToRef.current?.(uid);
+        }, 300);
+    }, []);
+
     if (stations.length === 0) {
         return (
             <Text c="dimmed">
@@ -76,11 +95,21 @@ export function StationsDashboard({
                     <StationCard
                         key={ station.uid }
                         station={ station }
+                        onLocate={
+                            station.lat != null && station.lng != null
+                                ? handleLocate
+                                : undefined
+                        }
                     />
                 )) }
             </SimpleGrid>
 
-            { map }
+            <div ref={ mapContainerRef }>
+                <StationsMapLoader
+                    stations={ stations }
+                    onRegisterFlyTo={ handleRegisterFlyTo }
+                />
+            </div>
         </>
     );
 }

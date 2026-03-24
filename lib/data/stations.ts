@@ -69,8 +69,6 @@ export async function fetchStationSummaries(): Promise<
                     }),
                 ]);
 
-            console.log(info, cnet, latestRecord);
-
             return {
                 uid,
                 name: info?.name ?? null,

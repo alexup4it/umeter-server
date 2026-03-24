@@ -10,20 +10,20 @@ function formatDate(dateString: string | null | undefined): string {
     }
 
     const d = new Date(dateString);
-    const year = d.getUTCFullYear();
-    const month = (d.getUTCMonth() + 1)
+    const year = d.getFullYear();
+    const month = (d.getMonth() + 1)
         .toString()
         .padStart(2, '0');
-    const day = d.getUTCDate().toString().padStart(2, '0');
-    const hours = d.getUTCHours().toString().padStart(2, '0');
-    const minutes = d.getUTCMinutes()
+    const day = d.getDate().toString().padStart(2, '0');
+    const hours = d.getHours().toString().padStart(2, '0');
+    const minutes = d.getMinutes()
         .toString()
         .padStart(2, '0');
-    const seconds = d.getUTCSeconds()
+    const seconds = d.getSeconds()
         .toString()
         .padStart(2, '0');
 
-    return `${month}/${day}/${year}, ${hours}:${minutes}:${seconds} UTC`;
+    return `${month}/${day}/${year}, ${hours}:${minutes}:${seconds}`;
 }
 
 interface DataRow {

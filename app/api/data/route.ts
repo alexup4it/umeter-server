@@ -24,8 +24,6 @@ export async function POST(request: NextRequest) {
 
     const { header, records } = parsed;
 
-    console.log(parsed);
-
     // Insert status record
     await prisma.status.create({
         data: {

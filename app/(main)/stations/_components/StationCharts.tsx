@@ -36,12 +36,12 @@ const SHORT_MONTHS = [
 
 function formatDate(dateString: string): string {
     const date = new Date(dateString);
-    const month = SHORT_MONTHS[date.getUTCMonth()];
-    const day = date.getUTCDate();
-    const hours = date.getUTCHours()
+    const month = SHORT_MONTHS[date.getMonth()];
+    const day = date.getDate();
+    const hours = date.getHours()
         .toString()
         .padStart(2, '0');
-    const minutes = date.getUTCMinutes()
+    const minutes = date.getMinutes()
         .toString()
         .padStart(2, '0');
 

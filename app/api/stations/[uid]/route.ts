@@ -32,8 +32,6 @@ export async function GET(
     const from = fromParam ? parseDate(fromParam) : undefined;
     const to = toParam ? parseDate(toParam) : undefined;
 
-    console.log('TO', to, toParam);
-
     const detail = await fetchStationDetail(uid, from, to);
 
     if (!detail) {

@@ -1,5 +1,13 @@
 /**
- * Parse a date string that can be either an ISO 8601 date or a timestamp (milliseconds).
+ * Convert Unix timestamp to Date object
+ * @param ts
+ */
+export function unixToDate(ts: number): Date {
+    return new Date(ts);
+}
+
+/**
+ * Parse a date string that can be either an ISO 8601 date or a ms timestamp.
  * Returns undefined if the value cannot be parsed into a valid date.
  */
 export function parseDate(value: string): Date | undefined {

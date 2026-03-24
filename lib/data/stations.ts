@@ -164,23 +164,15 @@ export async function fetchStationDetail(
                 lev: cnet.lev,
             }
             : null,
-        temperature: records.map((r) => ({
+        records: records.map((r) => ({
             ts: r.ts?.toISOString() ?? '',
-            value: r.temperature ?? 0,
-        })),
-        humidity: records.map((r) => ({
-            ts: r.ts?.toISOString() ?? '',
-            value: r.humidity ?? 0,
-        })),
-        windDirection: records.map((r) => ({
-            ts: r.ts?.toISOString() ?? '',
-            value: r.windDirection ?? 0,
-        })),
-        windSpeed: records.map((r) => ({
-            ts: r.ts?.toISOString() ?? '',
+            voltage: r.voltage,
+            temperature: r.temperature,
+            humidity: r.humidity,
+            windDirection: r.windDirection,
             windSpeedAvg: r.windSpeedAvg,
-            windSpeedMax: r.windSpeedMax,
             windSpeedMin: r.windSpeedMin,
+            windSpeedMax: r.windSpeedMax,
         })),
     };
 }

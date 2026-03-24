@@ -11,16 +11,15 @@ export interface StationSummary {
     voltage: number | null;
 }
 
-export interface SensorPoint {
+export interface SensorRecord {
     ts: string;
-    value: number;
-}
-
-export interface WindSpeedPoint {
-    ts: string;
+    voltage: number | null;
+    temperature: number | null;
+    humidity: number | null;
+    windDirection: number | null;
     windSpeedAvg: number | null;
-    windSpeedMax: number | null;
     windSpeedMin: number | null;
+    windSpeedMax: number | null;
 }
 
 export interface StationDetail {
@@ -34,10 +33,7 @@ export interface StationDetail {
     lastSeen: string | null;
     info: StationInfo | null;
     cnet: StationCnet | null;
-    temperature: SensorPoint[];
-    humidity: SensorPoint[];
-    windDirection: SensorPoint[];
-    windSpeed: WindSpeedPoint[];
+    records: SensorRecord[];
 }
 
 export interface StationInfo {

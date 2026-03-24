@@ -6,7 +6,7 @@ import { LineChart } from '@mantine/charts';
 import { Box, Paper, Stack, Title } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
 
-import type { WindSpeedPoint, SensorPoint } from '@/lib/types/station';
+import type { SensorRecord } from '@/lib/types/station';
 
 const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const POLL_INTERVAL_MS = 30_000;
@@ -48,36 +48,20 @@ function formatDate(dateString: string): string {
     return `${month} ${day} ${hours}:${minutes}`;
 }
 
-interface ChartData {
-    temperature: SensorPoint[];
-    humidity: SensorPoint[];
-    windDirection: SensorPoint[];
-    windSpeed: WindSpeedPoint[];
-}
-
 interface StationChartsProps {
     uid: string;
-    temperature: SensorPoint[];
-    humidity: SensorPoint[];
-    windDirection: SensorPoint[];
-    windSpeed: WindSpeedPoint[];
+    records: SensorRecord[];
 }
 
 export function StationCharts({
     uid,
-    temperature: initTemp,
-    humidity: initHum,
-    windDirection: initWindDirection,
-    windSpeed: initWindSpeed,
+    records: initRecords,
 }: StationChartsProps) {
     const [dateRange, setDateRange] = useState<
         [Date | null, Date | null]
     >(INITIAL_RANGE);
 
-    const [temperature, setTemperature] = useState(initTemp);
-    const [humidity, setHumidity] = useState(initHum);
-    const [windDirection, setWindDirection] = useState(initWindDirection);
-    const [windSpeed, setWindSpeed] = useState(initWindSpeed);
+    const [records, setRecords] = useState(initRecords);
 
     const dateRangeRef = useRef(dateRange);
 
@@ -115,11 +99,8 @@ export function StationCharts({
             );
             if (response.ok) {
                 const data = await response.json() as
-                    ChartData;
-                setTemperature(data.temperature);
-                setHumidity(data.humidity);
-                setWindDirection(data.windDirection);
-                setWindSpeed(data.windSpeed);
+                    { records: SensorRecord[] };
+                setRecords(data.records);
             }
         },
         [uid],
@@ -181,26 +162,26 @@ export function StationCharts({
         };
     }, [fetchData]);
 
-    const tempChartData = temperature.map((pt) => ({
-        date: formatDate(pt.ts),
-        temperature: pt.value,
+    const tempChartData = records.map((r) => ({
+        date: formatDate(r.ts),
+        temperature: r.temperature ?? 0,
     }));
 
-    const humChartData = humidity.map((pt) => ({
-        date: formatDate(pt.ts),
-        humidity: pt.value,
+    const humChartData = records.map((r) => ({
+        date: formatDate(r.ts),
+        humidity: r.humidity ?? 0,
     }));
 
-    const windDirectionChartData = windDirection.map((pt) => ({
-        date: formatDate(pt.ts),
-        windDirection: pt.value,
+    const windDirectionChartData = records.map((r) => ({
+        date: formatDate(r.ts),
+        windDirection: r.windDirection ?? 0,
     }));
 
-    const windSpeedChartData = windSpeed.map((pt) => ({
-        date: formatDate(pt.ts),
-        windSpeedAvg: pt.windSpeedAvg ?? 0,
-        windSpeedMin: pt.windSpeedMin ?? 0,
-        windSpeedMax: pt.windSpeedMax ?? 0,
+    const windSpeedChartData = records.map((r) => ({
+        date: formatDate(r.ts),
+        windSpeedAvg: r.windSpeedAvg ?? 0,
+        windSpeedMin: r.windSpeedMin ?? 0,
+        windSpeedMax: r.windSpeedMax ?? 0,
     }));
 
     return (

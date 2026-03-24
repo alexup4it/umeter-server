@@ -35,52 +35,43 @@ interface DataRow {
 export function StationDataTable({ detail }: {
     detail: StationDetail;
 }) {
-    const latestTemp = detail.temperature.length > 0
-        ? detail.temperature[detail.temperature.length - 1]
-        : null;
-    const latestHum = detail.humidity.length > 0
-        ? detail.humidity[detail.humidity.length - 1]
-        : null;
-    const latestWindDirection = detail.windDirection.length > 0
-        ? detail.windDirection[detail.windDirection.length - 1]
-        : null;
-    const latestWindSpeed = detail.windSpeed.length > 0
-        ? detail.windSpeed[detail.windSpeed.length - 1]
+    const latest = detail.records.length > 0
+        ? detail.records[detail.records.length - 1]
         : null;
 
     const rows: DataRow[] = [
         {
             label: 'Temperature',
-            value: latestTemp
-                ? `${latestTemp.value.toFixed(1)} °C`
+            value: latest?.temperature != null
+                ? `${latest.temperature.toFixed(1)} °C`
                 : '-',
-            ts: latestTemp?.ts,
+            ts: latest?.ts,
         },
         {
             label: 'Humidity',
-            value: latestHum
-                ? `${latestHum.value.toFixed(1)} %`
+            value: latest?.humidity != null
+                ? `${latest.humidity.toFixed(1)} %`
                 : '-',
-            ts: latestHum?.ts,
+            ts: latest?.ts,
         },
         {
             label: 'Wind direction',
-            value: latestWindDirection
-                ? `${latestWindDirection.value.toFixed(1)}°`
+            value: latest?.windDirection != null
+                ? `${latest.windDirection.toFixed(1)}°`
                 : '-',
-            ts: latestWindDirection?.ts,
+            ts: latest?.ts,
         },
         {
             label: 'Wind speed',
-            value: latestWindSpeed?.windSpeedAvg ?? '-',
-            ts: latestWindSpeed?.ts,
+            value: latest?.windSpeedAvg ?? '-',
+            ts: latest?.ts,
         },
         {
             label: 'Voltage',
             value: detail.voltage != null
                 ? `${detail.voltage.toFixed(2)} V`
                 : '-',
-            ts: latestWindSpeed?.ts ?? latestTemp?.ts,
+            ts: latest?.ts,
         },
         {
             label: 'Ticks',

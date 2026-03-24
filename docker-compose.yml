@@ -22,9 +22,13 @@ services:
     environment:
       DATABASE_URL: postgresql://umeter:${POSTGRES_PASSWORD}@postgres:5432/umeter
       HMAC_SECRET: ${HMAC_SECRET:?Set HMAC_SECRET in .env}
+      FIRMWARE_DIR: /app/firmware
+    volumes:
+      - firmware:/app/firmware
     depends_on:
       postgres:
         condition: service_healthy
 
 volumes:
   pgdata:
+  firmware:

@@ -31,6 +31,8 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
+RUN mkdir -p /app/firmware && chown nextjs:nodejs /app/firmware
+
 USER nextjs
 
 EXPOSE 3000

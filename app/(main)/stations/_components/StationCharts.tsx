@@ -282,10 +282,23 @@ export function StationCharts({
                     h={ 300 }
                     data={ windSpeedChartData }
                     dataKey="date"
-                    series={ [{
-                        name: 'windSpeedAvg',
-                        color: 'orange.6',
-                    }] }
+                    series={ [
+                        {
+                            name: 'windSpeedMin',
+                            label: 'Min',
+                            color: 'orange.3',
+                        },
+                        {
+                            name: 'windSpeedAvg',
+                            label: 'Avg',
+                            color: 'orange.6',
+                        },
+                        {
+                            name: 'windSpeedMax',
+                            label: 'Max',
+                            color: 'red.6',
+                        },
+                    ] }
                     curveType="natural"
                     withLegend
                     xAxisProps={ { tickMargin: 15 } }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { fetchStationDetail } from '@/lib/data/stations';
+import { parseDate } from '@/lib/utils/date';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,8 +29,10 @@ export async function GET(
     const fromParam = searchParams.get('from');
     const toParam = searchParams.get('to');
 
-    const from = fromParam ? new Date(fromParam) : undefined;
-    const to = toParam ? new Date(toParam) : undefined;
+    const from = fromParam ? parseDate(fromParam) : undefined;
+    const to = toParam ? parseDate(toParam) : undefined;
+
+    console.log('TO', to, toParam);
 
     const detail = await fetchStationDetail(uid, from, to);
 

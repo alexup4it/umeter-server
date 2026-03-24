@@ -5,25 +5,47 @@ const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 /**
  * Fetch all stations with their latest sensor readings from the last 7 days.
+ * Includes stations that have sent status OR info within the time window.
  */
 export async function fetchStationSummaries(): Promise<
     StationSummary[]
 > {
     const weekAgo = new Date(Date.now() - ONE_WEEK_MS);
 
-    const recentStatuses = await prisma.status.findMany({
-        where: {
-            ts: { gte: weekAgo },
-            uid: { not: null },
-        },
-        distinct: ['uid'],
-        orderBy: { ts: 'desc' },
-        select: { uid: true },
-    });
+    const [recentStatuses, recentInfos] = await Promise.all([
+        prisma.status.findMany({
+            where: {
+                ts: { gte: weekAgo },
+                uid: { not: null },
+            },
+            distinct: ['uid'],
+            orderBy: { ts: 'desc' },
+            select: { uid: true },
+        }),
+        prisma.info.findMany({
+            where: {
+                created: { gte: weekAgo },
+                uid: { not: null },
+            },
+            distinct: ['uid'],
+            orderBy: { created: 'desc' },
+            select: { uid: true },
+        }),
+    ]);
 
-    const uids = recentStatuses
-        .map((status) => status.uid)
-        .filter((uid): uid is number => uid !== null);
+    const uidSet = new Set<number>();
+    for (const row of recentStatuses) {
+        if (row.uid != null) {
+            uidSet.add(row.uid);
+        }
+    }
+    for (const row of recentInfos) {
+        if (row.uid != null) {
+            uidSet.add(row.uid);
+        }
+    }
+
+    const uids = [...uidSet];
 
     if (uids.length === 0) {
         return [];

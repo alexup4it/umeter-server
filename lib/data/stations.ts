@@ -69,6 +69,8 @@ export async function fetchStationSummaries(): Promise<
                     }),
                 ]);
 
+            console.log(info, cnet, latestRecord);
+
             return {
                 uid,
                 name: info?.name ?? null,
@@ -77,6 +79,7 @@ export async function fetchStationSummaries(): Promise<
                 lastSeen: latestRecord?.ts?.toISOString() ?? null,
                 temperature: latestRecord?.temperature ?? null,
                 humidity: latestRecord?.humidity ?? null,
+                pressure: latestRecord?.pressure ?? null,
                 windDirection: latestRecord?.windDirection ?? null,
                 windSpeed: latestRecord?.windSpeedAvg ?? null,
                 voltage: latestRecord?.voltage ?? null,
@@ -152,7 +155,6 @@ export async function fetchStationDetail(
                 periodUpload: info.periodUpload,
                 periodSensors: info.periodSensors,
                 periodAnemometer: info.periodAnemometer,
-                sens: info.sens,
             }
             : null,
         cnet: cnet
@@ -169,6 +171,7 @@ export async function fetchStationDetail(
             voltage: r.voltage,
             temperature: r.temperature,
             humidity: r.humidity,
+            pressure: r.pressure,
             windDirection: r.windDirection,
             windSpeedAvg: r.windSpeedAvg,
             windSpeedMin: r.windSpeedMin,

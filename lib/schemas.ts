@@ -15,7 +15,6 @@ export const infoPayloadSchema = z.object({
     period_upload: z.number().nullable().optional().default(null),
     period_sensors: z.number().nullable().optional().default(null),
     period_anemometer: z.number().nullable().optional().default(null),
-    sens: z.number().nullable().optional().default(null),
     color: z.string().nullable().optional().default(null),
 });
 

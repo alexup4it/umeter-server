@@ -1,5 +1,5 @@
 const HEADER_SIZE = 14;
-const RECORD_SIZE = 18;
+const RECORD_SIZE = 20;
 
 export interface DataHeader {
     uid: number;
@@ -17,6 +17,8 @@ export interface RawSensorRecord {
     temperature: number;
     /** centipercent RH (0.01%) */
     humidity: number;
+    /** hectopascals * 10 (0.1 hPa) */
+    pressure: number;
     /** centidegrees (0.01 deg) */
     windDirection: number;
     windSpeedAvg: number;
@@ -39,15 +41,16 @@ export interface ParsedPayload {
  *   12     uint8   tamper (0/1)
  *   13     uint8   records count
  *
- * Records (N x 18 bytes each):
+ * Records (N x 20 bytes each):
  *   0..3   uint32  timestamp
  *   4..5   uint16  voltage (mV)
  *   6..7   int16   temperature (centidegrees C)
  *   8..9   uint16  humidity (centipercent RH)
- *   10..11 uint16  wind_direction (centidegrees)
- *   12..13 uint16  wind_direction_avg
- *   14..15 uint16  wind_direction_min
- *   16..17 uint16  wind_direction_max
+ *   10..11 uint16  pressure (hPa * 10)
+ *   12..13 uint16  wind_direction (centidegrees)
+ *   14..15 uint16  wind_speed_avg
+ *   16..17 uint16  wind_speed_min
+ *   18..19 uint16  wind_speed_max
  */
 export function parseDataPayload(buf: Buffer): ParsedPayload {
     if (buf.length < HEADER_SIZE) {
@@ -77,10 +80,11 @@ export function parseDataPayload(buf: Buffer): ParsedPayload {
             voltage: buf.readUInt16LE(off + 4),
             temperature: buf.readInt16LE(off + 6),
             humidity: buf.readUInt16LE(off + 8),
-            windDirection: buf.readUInt16LE(off + 10),
-            windSpeedAvg: buf.readUInt16LE(off + 12),
-            windSpeedMin: buf.readUInt16LE(off + 14),
-            windSpeedMax: buf.readUInt16LE(off + 16),
+            pressure: buf.readUInt16LE(off + 10),
+            windDirection: buf.readUInt16LE(off + 12),
+            windSpeedAvg: buf.readUInt16LE(off + 14),
+            windSpeedMin: buf.readUInt16LE(off + 16),
+            windSpeedMax: buf.readUInt16LE(off + 18),
         });
     }
 

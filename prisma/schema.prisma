@@ -24,7 +24,6 @@ model Info {
   periodUpload     Int?      @map("period_upload")
   periodSensors    Int?      @map("period_sensors")
   periodAnemometer Int?      @map("period_anemometer")
-  sens             Int?
   color            String?   @db.VarChar(16)
   lat              Float?
   lng              Float?
@@ -52,6 +51,7 @@ model SensorRecord {
   voltage       Float?
   temperature   Float?
   humidity      Float?
+  pressure      Float?
   windDirection Float?    @map("wind_direction")
   windSpeedAvg  Int?      @map("wind_speed_avg")
   windSpeedMin  Int?      @map("wind_speed_min")

@@ -24,6 +24,8 @@ export async function POST(request: NextRequest) {
 
     const { header, records } = parsed;
 
+    console.log(parsed);
+
     // Insert status record
     await prisma.status.create({
         data: {
@@ -44,6 +46,7 @@ export async function POST(request: NextRequest) {
                 voltage: r.voltage / 1000, // mV → V
                 temperature: r.temperature / 100, // centidegrees → °C
                 humidity: r.humidity / 100, // centipercent → %
+                pressure: r.pressure / 10, // hPa*10 → hPa
                 windDirection: r.windDirection / 100, // centidegrees → °
                 windSpeedAvg: r.windSpeedAvg,
                 windSpeedMin: r.windSpeedMin,

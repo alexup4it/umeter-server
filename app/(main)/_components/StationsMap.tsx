@@ -168,6 +168,12 @@ export default function StationsMap({ stations, onRegisterFlyTo }: StationsMapPr
                                         </Text>
                                     </div>
                                     <div>
+                                        <Text size="xs" c="dimmed" lh={ 1.2 }>Pressure</Text>
+                                        <Text size="xs" fw={ 500 } lh={ 1.3 }>
+                                            { station.pressure != null ? `${station.pressure.toFixed(1)} hPa` : '--' }
+                                        </Text>
+                                    </div>
+                                    <div>
                                         <Text size="xs" c="dimmed" lh={ 1.2 }>Wind</Text>
                                         <Text size="xs" fw={ 500 } lh={ 1.3 }>
                                             { station.windSpeed != null ? `${station.windSpeed}` : '--' }

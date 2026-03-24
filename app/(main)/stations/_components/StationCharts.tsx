@@ -172,6 +172,11 @@ export function StationCharts({
         humidity: r.humidity ?? 0,
     }));
 
+    const pressureChartData = records.map((r) => ({
+        date: formatDate(r.ts),
+        pressure: r.pressure ?? 0,
+    }));
+
     const windDirectionChartData = records.map((r) => ({
         date: formatDate(r.ts),
         windDirection: r.windDirection ?? 0,
@@ -230,6 +235,24 @@ export function StationCharts({
                     series={ [{
                         name: 'humidity',
                         color: 'blue.6',
+                    }] }
+                    curveType="natural"
+                    withLegend
+                    xAxisProps={ { tickMargin: 15 } }
+                />
+            </Paper>
+
+            <Paper withBorder p="md" radius="md">
+                <Title order={ 4 } mb="md">
+                    Pressure (hPa)
+                </Title>
+                <LineChart
+                    h={ 300 }
+                    data={ pressureChartData }
+                    dataKey="date"
+                    series={ [{
+                        name: 'pressure',
+                        color: 'violet.6',
                     }] }
                     curveType="natural"
                     withLegend

@@ -55,6 +55,13 @@ export function StationDataTable({ detail }: {
             ts: latest?.ts,
         },
         {
+            label: 'Pressure',
+            value: latest?.pressure != null
+                ? `${latest.pressure.toFixed(1)} hPa`
+                : '-',
+            ts: latest?.ts,
+        },
+        {
             label: 'Wind direction',
             value: latest?.windDirection != null
                 ? `${latest.windDirection.toFixed(1)}°`
@@ -123,11 +130,6 @@ export function StationDataTable({ detail }: {
         {
             label: 'Period Sensor',
             value: detail.info?.periodSensors ?? '-',
-            ts: null,
-        },
-        {
-            label: 'Sens',
-            value: detail.info?.sens ?? '-',
             ts: null,
         },
         {

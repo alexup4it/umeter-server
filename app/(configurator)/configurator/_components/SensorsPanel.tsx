@@ -28,9 +28,9 @@ interface SensorData {
     bat: number | null;
     temp: number | null;
     hum: number | null;
+    pressure: number | null;
     windDirection: number | null;
     windSpeed: number | null;
-    sens: number | null;
 }
 
 interface SensorsPanelProps {
@@ -86,9 +86,9 @@ export function SensorsPanel({
         bat: null,
         temp: null,
         hum: null,
+        pressure: null,
         windDirection: null,
         windSpeed: null,
-        sens: null,
     });
     const [loading, setLoading] = useState(false);
     const [autoRefresh, setAutoRefresh] = useState(false);
@@ -152,9 +152,9 @@ export function SensorsPanel({
                 bat: null,
                 temp: null,
                 hum: null,
+                pressure: null,
                 windDirection: null,
                 windSpeed: null,
-                sens: null,
             });
         }
     }, [connected]);
@@ -228,13 +228,18 @@ export function SensorsPanel({
                     suffix=" %"
                 />
                 <SensorRow
+                    label="Pressure"
+                    value={
+                        data.pressure !== null
+                            ? (data.pressure / 100).toFixed(1)
+                            : null
+                    }
+                    suffix=" hPa"
+                />
+                <SensorRow
                     label="Wind direction"
                     value={ formatMilliValue(data.windDirection, 1) }
                     suffix="°"
-                />
-                <SensorRow
-                    label="Voltage"
-                    value={ formatVoltage(data.bat) }
                 />
                 <SensorRow
                     label="Wind speed"
@@ -245,12 +250,8 @@ export function SensorsPanel({
                     }
                 />
                 <SensorRow
-                    label="Avail"
-                    value={
-                        data.sens !== null
-                            ? `0b${data.sens.toString(2).padStart(8, '0')}`
-                            : null
-                    }
+                    label="Voltage"
+                    value={ formatVoltage(data.bat) }
                 />
             </Stack>
         </Paper>

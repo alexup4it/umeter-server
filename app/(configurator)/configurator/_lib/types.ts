@@ -30,10 +30,10 @@ export interface DeviceParams {
     periodUpload: number;
     periodSensors: number;
     periodAnemometer: number;
-    sens: number;
     bat: number;
     temp: number;
     hum: number;
+    pressure: number;
     windSpeed: number;
     windDirection: number;
 }
@@ -65,10 +65,10 @@ export const READABLE_PARAMS = [
     'period_upload',
     'period_sensors',
     'period_anemometer',
-    'sens',
     'bat',
     'temp',
     'hum',
+    'pressure',
     'wind_speed',
     'wind_direction',
 ] as const;
@@ -80,9 +80,9 @@ export const SENSOR_PARAMS = [
     'bat',
     'temp',
     'hum',
+    'pressure',
     'wind_speed',
     'wind_direction',
-    'sens',
 ] as const;
 
 export type SensorParamName = typeof SENSOR_PARAMS[number];
@@ -117,10 +117,10 @@ export const PARAM_KEY_MAP: Record<ReadableParamName, keyof DeviceParams> = {
     period_upload: 'periodUpload',
     period_sensors: 'periodSensors',
     period_anemometer: 'periodAnemometer',
-    sens: 'sens',
     bat: 'bat',
     temp: 'temp',
     hum: 'hum',
+    pressure: 'pressure',
     wind_speed: 'windSpeed',
     wind_direction: 'windDirection',
 };

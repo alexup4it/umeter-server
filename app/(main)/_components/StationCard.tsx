@@ -156,6 +156,13 @@ export function StationCard({ station, onLocate }: StationCardProps) {
                 </Paper>
 
                 <Paper withBorder p="xs">
+                    <Text size="xs" c="dimmed">Pressure</Text>
+                    <Text fw={ 500 }>
+                        { station.pressure != null ? `${station.pressure.toFixed(1)} hPa` : '--' }
+                    </Text>
+                </Paper>
+
+                <Paper withBorder p="xs">
                     <Text size="xs" c="dimmed">Wind direction</Text>
                     <Text fw={ 500 }>
                         { station.windDirection != null ? `${station.windDirection.toFixed(1)}°` : '--' }

@@ -6,6 +6,7 @@ export interface StationSummary {
     lastSeen: string | null;
     temperature: number | null;
     humidity: number | null;
+    pressure: number | null;
     windDirection: number | null;
     windSpeed: number | null;
     voltage: number | null;
@@ -16,6 +17,7 @@ export interface SensorRecord {
     voltage: number | null;
     temperature: number | null;
     humidity: number | null;
+    pressure: number | null;
     windDirection: number | null;
     windSpeedAvg: number | null;
     windSpeedMin: number | null;
@@ -46,7 +48,6 @@ export interface StationInfo {
     periodUpload: number | null;
     periodSensors: number | null;
     periodAnemometer: number | null;
-    sens: number | null;
 }
 
 export interface StationCnet {

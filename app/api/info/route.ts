@@ -39,7 +39,6 @@ async function handleRequest(request: NextRequest) {
             periodUpload: payload.period_upload,
             periodSensors: payload.period_sensors,
             periodAnemometer: payload.period_anemometer,
-            sens: payload.sens,
             color: payload.color,
         },
     });

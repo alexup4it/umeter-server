@@ -19,6 +19,10 @@ export function buildReadCommand(param: ReadableParamName): string {
     return JSON.stringify({ cmd: 'rd_param', param });
 }
 
+export function buildReadSensorsCommand(): string {
+    return JSON.stringify({ cmd: 'rd_sensors' });
+}
+
 export function buildWriteCommand(
     param: WritableParamName,
     value: number | string,

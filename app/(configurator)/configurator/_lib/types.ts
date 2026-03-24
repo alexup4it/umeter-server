@@ -30,12 +30,6 @@ export interface DeviceParams {
     periodUpload: number;
     periodSensors: number;
     periodAnemometer: number;
-    bat: number;
-    temp: number;
-    hum: number;
-    pressure: number;
-    windSpeed: number;
-    windDirection: number;
 }
 
 export interface WritableParams {
@@ -65,27 +59,9 @@ export const READABLE_PARAMS = [
     'period_upload',
     'period_sensors',
     'period_anemometer',
-    'bat',
-    'temp',
-    'hum',
-    'pressure',
-    'wind_speed',
-    'wind_direction',
 ] as const;
 
 export type ReadableParamName = typeof READABLE_PARAMS[number];
-
-/** Sensor-related params for polling */
-export const SENSOR_PARAMS = [
-    'bat',
-    'temp',
-    'hum',
-    'pressure',
-    'wind_speed',
-    'wind_direction',
-] as const;
-
-export type SensorParamName = typeof SENSOR_PARAMS[number];
 
 export const WRITABLE_PARAMS = [
     'uid',
@@ -117,12 +93,6 @@ export const PARAM_KEY_MAP: Record<ReadableParamName, keyof DeviceParams> = {
     period_upload: 'periodUpload',
     period_sensors: 'periodSensors',
     period_anemometer: 'periodAnemometer',
-    bat: 'bat',
-    temp: 'temp',
-    hum: 'hum',
-    pressure: 'pressure',
-    wind_speed: 'windSpeed',
-    wind_direction: 'windDirection',
 };
 
 /** Maps WritableParams keys to wire param names */
@@ -140,6 +110,16 @@ export const WRITABLE_KEY_MAP: Record<keyof WritableParams, WritableParamName> =
 export interface ProtocolResponse {
     status: 'ok' | 'error';
     [key: string]: unknown;
+}
+
+/** Response shape for the rd_sensors command */
+export interface SensorsResponse extends ProtocolResponse {
+    bat: number;
+    temp: number;
+    hum: number;
+    pressure: number;
+    wind_speed: number;
+    wind_direction: number;
 }
 
 export interface SerialCallbacks {

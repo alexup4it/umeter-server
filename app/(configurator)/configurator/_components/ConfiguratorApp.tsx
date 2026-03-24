@@ -9,6 +9,7 @@ import {
     buildIfaceCommand,
     buildMemCommand,
     buildReadCommand,
+    buildReadSensorsCommand,
     buildResetCommand,
     buildSaveCommand,
     buildWriteCommand,
@@ -21,7 +22,7 @@ import {
     PARAM_KEY_MAP,
     type ProtocolResponse,
     READABLE_PARAMS,
-    type SensorParamName,
+    type SensorsResponse,
     WRITABLE_KEY_MAP,
     type WritableParams,
 } from '../_lib/types';
@@ -314,9 +315,14 @@ export function ConfiguratorApp() {
         [sendCommand],
     );
 
-    const fetchSensorParam = useCallback(
-        (param: SensorParamName) =>
-            sendCommand(buildReadCommand(param)),
+    const fetchSensors = useCallback(
+        async (): Promise<SensorsResponse> => {
+            const response = await sendCommand(
+                buildReadSensorsCommand(),
+            );
+
+            return response as SensorsResponse;
+        },
         [sendCommand],
     );
 
@@ -342,7 +348,7 @@ export function ConfiguratorApp() {
                                 />
                                 <SensorsPanel
                                     connected={ isConnected }
-                                    onFetchParam={ fetchSensorParam }
+                                    onFetchSensors={ fetchSensors }
                                 />
                                 <MemoryInfo
                                     connected={ isConnected }

@@ -15,12 +15,7 @@ import {
     Tooltip,
 } from '@mantine/core';
 
-import {
-    type ProtocolResponse,
-    type SensorParamName,
-    PARAM_KEY_MAP,
-    SENSOR_PARAMS,
-} from '../_lib/types';
+import { type SensorsResponse } from '../_lib/types';
 
 const DEFAULT_INTERVAL = 10;
 
@@ -35,7 +30,7 @@ interface SensorData {
 
 interface SensorsPanelProps {
     connected: boolean;
-    onFetchParam: (param: SensorParamName) => Promise<ProtocolResponse>;
+    onFetchSensors: () => Promise<SensorsResponse>;
 }
 
 function formatMilliValue(
@@ -80,7 +75,7 @@ function SensorRow({ label, value, suffix = '' }: SensorRowProps) {
 
 export function SensorsPanel({
     connected,
-    onFetchParam,
+    onFetchSensors,
 }: SensorsPanelProps) {
     const [data, setData] = useState<SensorData>({
         bat: null,
@@ -101,28 +96,24 @@ export function SensorsPanel({
         setLoading(true);
 
         try {
-            const result: Partial<SensorData> = {};
+            const response = await onFetchSensors();
 
-            for (const param of SENSOR_PARAMS) {
-                const response = await onFetchParam(param);
-                if (response.status === 'ok') {
-                    const key = PARAM_KEY_MAP[param];
-                    const value = response[param];
-
-                    if (typeof value === 'number') {
-                        (result as Record<string, number>)[key] =
-                            value;
-                    }
-                }
+            if (response.status === 'ok') {
+                setData({
+                    bat: response.bat,
+                    temp: response.temp,
+                    hum: response.hum,
+                    pressure: response.pressure,
+                    windDirection: response.wind_direction,
+                    windSpeed: response.wind_speed,
+                });
             }
-
-            setData((prev) => ({ ...prev, ...result }));
         } catch {
             // Silently fail
         } finally {
             setLoading(false);
         }
-    }, [onFetchParam]);
+    }, [onFetchSensors]);
 
     // Auto-refresh interval
     useEffect(() => {

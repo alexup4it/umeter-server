@@ -4,13 +4,15 @@ import { useEffect, useState } from 'react';
 
 import Link from 'next/link';
 
-import { ActionIcon, Badge, Group, Paper, SimpleGrid, Text, Tooltip } from '@mantine/core';
+import { ActionIcon, Badge, Checkbox, Group, Paper, SimpleGrid, Text, Tooltip } from '@mantine/core';
 
 import type { StationSummary } from '@/lib/types/station';
 
 interface StationCardProps {
     station: StationSummary;
     onLocate?: (uid: number) => void;
+    selected?: boolean;
+    onToggleSelect?: (uid: number) => void;
 }
 
 function getStatusInfo(lastSeen: string | null): { color: string; label: string } {
@@ -79,7 +81,7 @@ function MapPinIcon() {
 
 const LIVE_UPDATE_INTERVAL_MS = 30_000;
 
-export function StationCard({ station, onLocate }: StationCardProps) {
+export function StationCard({ station, onLocate, selected, onToggleSelect }: StationCardProps) {
     const [status, setStatus] = useState(SSR_STATUS);
     const [lastSeenStr, setLastSeenStr] = useState(SSR_RELATIVE_TIME);
 
@@ -106,10 +108,33 @@ export function StationCard({ station, onLocate }: StationCardProps) {
             style={ { textDecoration: 'none', color: 'inherit', display: 'block' } }
         >
             <Group justify="space-between" mb="xs">
-                <Text fw={ 600 } size="lg" truncate>
-                    { station.name ?? station.uid }
-                </Text>
                 <Group gap="xs">
+                    { onToggleSelect && (
+                        <span
+                            onClick={ (event) => {
+                                event.stopPropagation();
+                            } }
+                        >
+                            <Checkbox
+                                checked={ selected ?? false }
+                                onChange={ () => {
+                                    onToggleSelect(station.uid);
+                                } }
+                            />
+                        </span>
+                    ) }
+                    <Text fw={ 600 } size="lg" truncate>
+                        { station.name ?? station.uid }
+                    </Text>
+                </Group>
+                <Group gap="xs">
+                    { (station.hasPendingConfig || station.hasPendingFirmware) && (
+                        <Tooltip label="Pending updates" withArrow>
+                            <Badge color="orange" size="xs" variant="filled">
+                                Pending
+                            </Badge>
+                        </Tooltip>
+                    ) }
                     { onLocate && (
                         <Tooltip label="Show on map" withArrow>
                             <ActionIcon

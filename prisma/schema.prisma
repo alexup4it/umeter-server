@@ -75,3 +75,24 @@ model Cnet {
 
   @@map("cnet")
 }
+
+model DeviceConfig {
+  deviceUid        Int      @id @map("device_uid")
+  created          DateTime @default(now())
+  apn              String?  @db.VarChar(256)
+  urlOta           String?  @map("url_ota") @db.VarChar(256)
+  urlApp           String?  @map("url_app") @db.VarChar(256)
+  periodUpload     Int?     @map("period_upload")
+  periodSensors    Int?     @map("period_sensors")
+  periodAnemometer Int?     @map("period_anemometer")
+
+  @@map("device_config")
+}
+
+model FirmwareAssignment {
+  deviceUid Int      @id @map("device_uid")
+  created   DateTime @default(now())
+  filename  String   @db.VarChar(256)
+
+  @@map("firmware_assignment")
+}

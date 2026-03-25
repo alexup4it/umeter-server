@@ -189,6 +189,11 @@ export function StationCharts({
         windSpeedMax: r.windSpeedMax ?? 0,
     }));
 
+    const batteryChartData = records.map((r) => ({
+        date: formatDate(r.ts),
+        voltage: r.voltage ?? 0,
+    }));
+
     return (
         <Stack gap="lg" mt="lg">
             <Box maw={ 300 }>
@@ -303,6 +308,24 @@ export function StationCharts({
                             color: 'red.6',
                         },
                     ] }
+                    curveType="natural"
+                    withLegend
+                    xAxisProps={ { tickMargin: 15 } }
+                />
+            </Paper>
+
+            <Paper withBorder p="md" radius="md">
+                <Title order={ 4 } mb="md">
+                    Battery
+                </Title>
+                <LineChart
+                    h={ 300 }
+                    data={ batteryChartData }
+                    dataKey="voltage"
+                    series={ [{
+                        name: 'voltage',
+                        color: 'red.6',
+                    }] }
                     curveType="natural"
                     withLegend
                     xAxisProps={ { tickMargin: 15 } }

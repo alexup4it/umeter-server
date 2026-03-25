@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import {
+    buildFlaggedResponse,
+    checkAndApplyConfig,
+    checkAndApplyFirmware,
+} from '@/lib/data/pending';
 import prisma from '@/lib/prisma';
 import { infoPayloadSchema } from '@/lib/schemas';
 import { unixToDate } from '@/lib/utils/date';
-import { hmacBase64, verifyHmac } from '@/lib/utils/hmac';
+import { verifyHmac } from '@/lib/utils/hmac';
 
 export async function GET(request: NextRequest) {
     return handleRequest(request);
@@ -43,9 +48,30 @@ async function handleRequest(request: NextRequest) {
         },
     });
 
-    const responseBody = JSON.stringify({ status: 'ok' });
-    const response = NextResponse.json({ status: 'ok' });
-    response.headers.set('Authorization', hmacBase64(responseBody));
+    // Check if pending config/firmware was applied by this info report
+    if (payload.uid != null) {
+        await Promise.all([
+            checkAndApplyConfig(payload.uid, {
+                apn: payload.apn ?? null,
+                urlOta: payload.url_ota ?? null,
+                urlApp: payload.url_app ?? null,
+                periodUpload: payload.period_upload ?? null,
+                periodSensors: payload.period_sensors ?? null,
+                periodAnemometer: payload.period_anemometer ?? null,
+                appVer: payload.app_ver ?? null,
+            }),
+            checkAndApplyFirmware(payload.uid, {
+                apn: payload.apn ?? null,
+                urlOta: payload.url_ota ?? null,
+                urlApp: payload.url_app ?? null,
+                periodUpload: payload.period_upload ?? null,
+                periodSensors: payload.period_sensors ?? null,
+                periodAnemometer: payload.period_anemometer ?? null,
+                appVer: payload.app_ver ?? null,
+            }),
+        ]);
+    }
 
-    return response;
+    // Respond with remaining pending-update flags
+    return buildFlaggedResponse(payload.uid);
 }

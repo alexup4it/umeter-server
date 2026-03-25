@@ -53,7 +53,7 @@ export async function fetchStationSummaries(): Promise<
 
     return Promise.all(
         uids.map(async (uid) => {
-            const [info, cnet, latestRecord] =
+            const [info, cnet, latestRecord, pendingConfig, pendingFirmware] =
                 await Promise.all([
                     prisma.info.findFirst({
                         where: { uid },
@@ -66,6 +66,12 @@ export async function fetchStationSummaries(): Promise<
                     prisma.sensorRecord.findFirst({
                         where: { uid, ts: { gte: weekAgo } },
                         orderBy: { ts: 'desc' },
+                    }),
+                    prisma.deviceConfig.findUnique({
+                        where: { deviceUid: uid },
+                    }),
+                    prisma.firmwareAssignment.findUnique({
+                        where: { deviceUid: uid },
                     }),
                 ]);
 
@@ -81,6 +87,8 @@ export async function fetchStationSummaries(): Promise<
                 windDirection: latestRecord?.windDirection ?? null,
                 windSpeed: latestRecord?.windSpeedAvg ?? null,
                 voltage: latestRecord?.voltage ?? null,
+                hasPendingConfig: pendingConfig !== null,
+                hasPendingFirmware: pendingFirmware !== null,
             };
         }),
     );
@@ -102,7 +110,7 @@ export async function fetchStationDetail(
     const dateTo = to ?? now;
     const dateFilter = { gte: dateFrom, lte: dateTo };
 
-    const [info, status, cnet, records] =
+    const [info, status, cnet, records, pendingConfig, pendingFirmware] =
         await Promise.all([
             prisma.info.findFirst({
                 where: { uid },
@@ -119,6 +127,12 @@ export async function fetchStationDetail(
             prisma.sensorRecord.findMany({
                 where: { uid, ts: dateFilter },
                 orderBy: { ts: 'asc' },
+            }),
+            prisma.deviceConfig.findUnique({
+                where: { deviceUid: uid },
+            }),
+            prisma.firmwareAssignment.findUnique({
+                where: { deviceUid: uid },
             }),
         ]);
 
@@ -150,6 +164,8 @@ export async function fetchStationDetail(
                 blStatus: info.blStatus,
                 mcu: info.mcu,
                 apn: info.apn,
+                urlOta: info.urlOta,
+                urlApp: info.urlApp,
                 periodUpload: info.periodUpload,
                 periodSensors: info.periodSensors,
                 periodAnemometer: info.periodAnemometer,
@@ -175,5 +191,18 @@ export async function fetchStationDetail(
             windSpeedMin: r.windSpeedMin,
             windSpeedMax: r.windSpeedMax,
         })),
+        pendingConfig: pendingConfig
+            ? {
+                apn: pendingConfig.apn,
+                urlOta: pendingConfig.urlOta,
+                urlApp: pendingConfig.urlApp,
+                periodUpload: pendingConfig.periodUpload,
+                periodSensors: pendingConfig.periodSensors,
+                periodAnemometer: pendingConfig.periodAnemometer,
+            }
+            : null,
+        pendingFirmware: pendingFirmware
+            ? { filename: pendingFirmware.filename }
+            : null,
     };
 }

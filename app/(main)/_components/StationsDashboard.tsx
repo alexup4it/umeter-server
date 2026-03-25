@@ -6,6 +6,7 @@ import { SimpleGrid, Text } from '@mantine/core';
 
 import type { StationSummary } from '@/lib/types/station';
 
+import { BulkActions } from './BulkActions';
 import { StationCard } from './StationCard';
 import { StationsMapLoader } from './StationsMapLoader';
 
@@ -19,33 +20,38 @@ export function StationsDashboard({
     initialStations,
 }: StationsDashboardProps) {
     const [stations, setStations] = useState(initialStations);
+    const [selectedUids, setSelectedUids] = useState<number[]>([]);
     const flyToRef = useRef<((uid: number) => void) | null>(null);
     const mapContainerRef = useRef<HTMLDivElement>(null);
+
+    const fetchStations = useCallback(async (signal?: AbortSignal) => {
+        try {
+            const response = await fetch(
+                '/api/stations',
+                { signal },
+            );
+            if (response.ok) {
+                const data = await response.json() as
+                    StationSummary[];
+                setStations(data);
+            }
+        } catch (fetchError: unknown) {
+            if (fetchError instanceof DOMException
+                && fetchError.name === 'AbortError') {
+                return;
+            }
+            console.error(
+                'Failed to fetch stations',
+                fetchError,
+            );
+        }
+    }, []);
 
     useEffect(() => {
         const controller = new AbortController();
 
         const poll = async () => {
-            try {
-                const response = await fetch(
-                    '/api/stations',
-                    { signal: controller.signal },
-                );
-                if (response.ok) {
-                    const data = await response.json() as
-                        StationSummary[];
-                    setStations(data);
-                }
-            } catch (fetchError: unknown) {
-                if (fetchError instanceof DOMException
-                    && fetchError.name === 'AbortError') {
-                    return;
-                }
-                console.error(
-                    'Failed to poll stations',
-                    fetchError,
-                );
-            }
+            await fetchStations(controller.signal);
         };
 
         const intervalId = setInterval(
@@ -57,7 +63,7 @@ export function StationsDashboard({
             controller.abort();
             clearInterval(intervalId);
         };
-    }, []);
+    }, [fetchStations]);
 
     const handleRegisterFlyTo = useCallback(
         (fn: (uid: number) => void) => {
@@ -77,6 +83,23 @@ export function StationsDashboard({
         }, 300);
     }, []);
 
+    const handleToggleSelect = useCallback((uid: number) => {
+        setSelectedUids((prev) =>
+            prev.includes(uid) ? prev.filter((id) => id !== uid) : [...prev, uid]);
+    }, []);
+
+    const handleClearSelection = useCallback(() => {
+        setSelectedUids([]);
+    }, []);
+
+    const handleSelectAll = useCallback(() => {
+        setSelectedUids(stations.map((station) => station.uid));
+    }, [stations]);
+
+    const handleRefresh = useCallback(() => {
+        void fetchStations();
+    }, [fetchStations]);
+
     if (stations.length === 0) {
         return (
             <Text c="dimmed">
@@ -87,6 +110,14 @@ export function StationsDashboard({
 
     return (
         <>
+            <BulkActions
+                selectedUids={ selectedUids }
+                totalStations={ stations.length }
+                onClearSelection={ handleClearSelection }
+                onSelectAll={ handleSelectAll }
+                onRefresh={ handleRefresh }
+            />
+
             <SimpleGrid
                 cols={ { base: 1, sm: 2, lg: 3 } }
                 spacing="md"
@@ -95,11 +126,13 @@ export function StationsDashboard({
                     <StationCard
                         key={ station.uid }
                         station={ station }
+                        selected={ selectedUids.includes(station.uid) }
                         onLocate={
                             station.lat != null && station.lng != null
                                 ? handleLocate
                                 : undefined
                         }
+                        onToggleSelect={ handleToggleSelect }
                     />
                 )) }
             </SimpleGrid>

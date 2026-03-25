@@ -10,6 +10,8 @@ export interface StationSummary {
     windDirection: number | null;
     windSpeed: number | null;
     voltage: number | null;
+    hasPendingConfig: boolean;
+    hasPendingFirmware: boolean;
 }
 
 export interface SensorRecord {
@@ -24,6 +26,19 @@ export interface SensorRecord {
     windSpeedMax: number | null;
 }
 
+export interface PendingConfig {
+    apn: string | null;
+    urlOta: string | null;
+    urlApp: string | null;
+    periodUpload: number | null;
+    periodSensors: number | null;
+    periodAnemometer: number | null;
+}
+
+export interface PendingFirmware {
+    filename: string;
+}
+
 export interface StationDetail {
     uid: number;
     name: string | null;
@@ -36,6 +51,8 @@ export interface StationDetail {
     info: StationInfo | null;
     cnet: StationCnet | null;
     records: SensorRecord[];
+    pendingConfig: PendingConfig | null;
+    pendingFirmware: PendingFirmware | null;
 }
 
 export interface StationInfo {
@@ -45,6 +62,8 @@ export interface StationInfo {
     blStatus: number | null;
     mcu: string | null;
     apn: string | null;
+    urlOta: string | null;
+    urlApp: string | null;
     periodUpload: number | null;
     periodSensors: number | null;
     periodAnemometer: number | null;

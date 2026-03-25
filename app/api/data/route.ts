@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { buildFlaggedResponse } from '@/lib/data/pending';
 import prisma from '@/lib/prisma';
 import { unixToDate } from '@/lib/utils/date';
 import { parseDataPayload } from '@/lib/utils/decode';
-import { hmacBase64, verifyHmac } from '@/lib/utils/hmac';
+import { verifyHmac } from '@/lib/utils/hmac';
 
 export async function POST(request: NextRequest) {
     const rawBody = Buffer.from(await request.arrayBuffer());
@@ -53,9 +54,6 @@ export async function POST(request: NextRequest) {
         });
     }
 
-    const responseBody = JSON.stringify({ status: 'ok' });
-    const response = NextResponse.json({ status: 'ok' });
-    response.headers.set('Authorization', hmacBase64(responseBody));
-
-    return response;
+    // Respond with pending-update flags
+    return buildFlaggedResponse(header.uid);
 }

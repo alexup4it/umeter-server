@@ -2,10 +2,14 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
+import { Stack } from '@mantine/core';
+
 import type { StationDetail } from '@/lib/types/station';
 
 import { StationCharts } from './StationCharts';
+import { StationConfigPanel } from './StationConfigPanel';
 import { StationDataTable } from './StationDataTable';
+import { StationFirmwarePanel } from './StationFirmwarePanel';
 
 const POLL_INTERVAL_MS = 30_000;
 
@@ -60,14 +64,31 @@ export function StationDetailView({
         };
     }, [fetchDetail]);
 
+    const handleUpdated = useCallback(() => {
+        void fetchDetail();
+    }, [fetchDetail]);
+
     return (
-        <>
+        <Stack gap="xl">
             <StationCharts
                 uid={ uid }
                 records={ detail.records }
             />
 
+            <StationConfigPanel
+                uid={ Number(uid) }
+                info={ detail.info }
+                pendingConfig={ detail.pendingConfig }
+                onUpdated={ handleUpdated }
+            />
+
+            <StationFirmwarePanel
+                uid={ Number(uid) }
+                pendingFirmware={ detail.pendingFirmware }
+                onUpdated={ handleUpdated }
+            />
+
             <StationDataTable detail={ detail } />
-        </>
+        </Stack>
     );
 }

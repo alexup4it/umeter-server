@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { buildFlaggedResponse } from '@/lib/data/pending';
 import prisma from '@/lib/prisma';
 import { cnetPayloadSchema } from '@/lib/schemas';
 import { unixToDate } from '@/lib/utils/date';
-import { hmacBase64, verifyHmac } from '@/lib/utils/hmac';
+import { verifyHmac } from '@/lib/utils/hmac';
 import { lookupCellLocation } from '@/lib/utils/opencellid';
 
 export async function GET(request: NextRequest) {
@@ -56,9 +57,6 @@ async function handleRequest(request: NextRequest) {
         });
     }
 
-    const responseBody = JSON.stringify({ status: 'ok' });
-    const response = NextResponse.json({ status: 'ok' });
-    response.headers.set('Authorization', hmacBase64(responseBody));
-
-    return response;
+    // Respond with pending-update flags
+    return buildFlaggedResponse(payload.uid);
 }

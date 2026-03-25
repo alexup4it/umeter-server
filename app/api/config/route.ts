@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { getConfigForDevice } from '@/lib/data/pending';
-import { hmacBase64, verifyHmac } from '@/lib/utils/hmac';
+import { hmacBase64 } from '@/lib/utils/hmac';
 
 export async function GET(request: NextRequest) {
     const uidParam = request.nextUrl.searchParams.get('uid');
@@ -14,12 +14,6 @@ export async function GET(request: NextRequest) {
 
     if (isNaN(uid)) {
         return new NextResponse('uid must be integer', { status: 400 });
-    }
-
-    const auth = request.headers.get('Authorization');
-
-    if (!auth || !verifyHmac('', auth)) {
-        return new NextResponse('Invalid HMAC', { status: 401 });
     }
 
     const config = await getConfigForDevice(uid);

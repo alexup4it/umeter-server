@@ -2,22 +2,16 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { useRouter, useSearchParams } from 'next/navigation';
+
 import { LineChart } from '@mantine/charts';
 import { Box, Paper, Stack, Title } from '@mantine/core';
-import { DatePickerInput } from '@mantine/dates';
+import { DatePickerInput, type DatesRangeValue } from '@mantine/dates';
 
 import type { SensorRecord } from '@/lib/types/station';
 
 const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const POLL_INTERVAL_MS = 30_000;
-
-function computeDefaultRange(): [Date, Date] {
-    const now = Date.now();
-
-    return [new Date(now - ONE_WEEK_MS), new Date(now)];
-}
-
-const INITIAL_RANGE: [null, null] = [null, null];
 
 const SHORT_MONTHS = [
     'Jan',
@@ -48,6 +42,97 @@ function formatDate(dateString: string): string {
     return `${month} ${day} ${hours}:${minutes}`;
 }
 
+function startOfDay(date: Date): Date {
+    const result = new Date(date);
+    result.setHours(0, 0, 0, 0);
+
+    return result;
+}
+
+function endOfDay(date: Date): Date {
+    const result = new Date(date);
+    result.setHours(23, 59, 59, 999);
+
+    return result;
+}
+
+/**
+ * Checks whether a string is a valid `YYYY-MM-DD` date.
+ */
+function isValidDateString(value: string): boolean {
+    const date = new Date(value);
+
+    return !Number.isNaN(date.getTime());
+}
+
+function buildRecordsUrl(
+    uid: string,
+    from: Date,
+    to: Date,
+    after?: string,
+): string {
+    const url = new URL(
+        `/api/stations/${uid}/records`,
+        window.location.origin,
+    );
+    url.searchParams.set('from', from.toISOString());
+    url.searchParams.set('to', to.toISOString());
+
+    if (after) {
+        url.searchParams.set('after', after);
+    }
+
+    return url.toString();
+}
+
+/**
+ * Reads `from` and `to` URL search params.
+ *
+ * - No `from` → default to 1 week ago
+ * - No `to`   → live mode (sliding window, auto-refresh)
+ * - Both set  → historical mode (fixed range, no polling)
+ *
+ * Returns raw date-strings (`YYYY-MM-DD`) that can be fed
+ * straight into Mantine's DatePickerInput.
+ */
+function useDateRangeParams() {
+    const searchParams = useSearchParams();
+
+    const rawFrom = searchParams.get('from');
+    const rawTo = searchParams.get('to');
+
+    const fromParam = rawFrom && isValidDateString(rawFrom)
+        ? rawFrom
+        : null;
+    const toParam = rawTo && isValidDateString(rawTo)
+        ? rawTo
+        : null;
+
+    const isLive = !toParam;
+
+    return { fromParam, toParam, isLive };
+}
+
+/**
+ * Converts the (possibly null) URL date-strings into a
+ * concrete `[Date, Date]` range suitable for the API.
+ *
+ * `Date.now()` is called here — keep this out of render.
+ */
+function computeEffectiveRange(
+    fromParam: string | null,
+    toParam: string | null,
+): [Date, Date] {
+    const effectiveFrom = fromParam
+        ? startOfDay(new Date(fromParam))
+        : new Date(Date.now() - ONE_WEEK_MS);
+    const effectiveTo = toParam
+        ? endOfDay(new Date(toParam))
+        : new Date();
+
+    return [effectiveFrom, effectiveTo];
+}
+
 interface StationChartsProps {
     uid: string;
     records: SensorRecord[];
@@ -57,88 +142,147 @@ export function StationCharts({
     uid,
     records: initRecords,
 }: StationChartsProps) {
-    const [dateRange, setDateRange] = useState<
-        [Date | null, Date | null]
-    >(INITIAL_RANGE);
+    const router = useRouter();
+    const {
+        fromParam,
+        toParam,
+        isLive,
+    } = useDateRangeParams();
 
     const [records, setRecords] = useState(initRecords);
-
-    const dateRangeRef = useRef(dateRange);
+    const recordsRef = useRef(records);
 
     useEffect(() => {
-        dateRangeRef.current = dateRange;
-    }, [dateRange]);
+        recordsRef.current = records;
+    }, [records]);
 
-    // Set default date range on client only to avoid hydration mismatch
+    // Keep refs for polling access
+    const isLiveRef = useRef(isLive);
+    const fromParamRef = useRef(fromParam);
+
     useEffect(() => {
-        const id = requestAnimationFrame(() => {
-            setDateRange(computeDefaultRange());
-        });
+        isLiveRef.current = isLive;
+        fromParamRef.current = fromParam;
+    }, [isLive, fromParam]);
 
-        return () => {
-            cancelAnimationFrame(id);
-        };
-    }, []);
+    /**
+     * The date picker value: `[from, to]`.
+     * Mantine v8 expects `string | null` per slot.
+     * In live mode (no `to` param), the second slot is
+     * `null` to indicate an open-ended range.
+     */
+    const pickerValue: DatesRangeValue = [
+        fromParam,
+        toParam,
+    ];
 
-    const fetchData = useCallback(
-        async (
-            from: Date,
-            to: Date,
-            signal?: AbortSignal,
-        ) => {
-            const url = new URL(
-                `/api/stations/${uid}`,
-                window.location.origin,
+    /**
+     * Incremental poll: fetches only records newer than the
+     * last known timestamp and appends them. Also trims
+     * records that have fallen outside the sliding window.
+     */
+    const fetchNewRecords = useCallback(
+        async (signal?: AbortSignal) => {
+            if (!isLiveRef.current) {
+                return;
+            }
+
+            const [from, to] = computeEffectiveRange(
+                fromParamRef.current,
+                null,
             );
-            url.searchParams.set('from', from.toISOString());
-            url.searchParams.set('to', to.toISOString());
+            const current = recordsRef.current;
+            const lastTs = current.length > 0
+                ? current[current.length - 1].ts
+                : undefined;
 
             const response = await fetch(
-                url.toString(),
+                buildRecordsUrl(uid, from, to, lastTs),
                 { signal },
             );
-            if (response.ok) {
-                const data = await response.json() as
-                    { records: SensorRecord[] };
-                setRecords(data.records);
+
+            if (!response.ok) {
+                return;
             }
+
+            const data = await response.json() as
+                { records: SensorRecord[] };
+
+            if (data.records.length === 0) {
+                return;
+            }
+
+            setRecords((prev) => {
+                const merged = [...prev, ...data.records];
+                const fromMs = from.getTime();
+                const firstValidIdx = merged.findIndex(
+                    (r) => new Date(r.ts).getTime() >= fromMs,
+                );
+
+                return firstValidIdx > 0
+                    ? merged.slice(firstValidIdx)
+                    : merged;
+            });
         },
         [uid],
     );
 
-    const handleDateChange = async (
-        val: [Date | null, Date | null],
-    ) => {
-        setDateRange(val);
-        const [from, to] = val;
+    // Initial full load when range params change
+    useEffect(() => {
+        const controller = new AbortController();
+        const [from, to] = computeEffectiveRange(
+            fromParam,
+            toParam,
+        );
 
-        if (from && to) {
-            try {
-                await fetchData(from, to);
-            } catch (fetchError: unknown) {
+        const load = async () => {
+            const response = await fetch(
+                buildRecordsUrl(uid, from, to),
+                { signal: controller.signal },
+            );
+            if (response.ok) {
+                const data = await response.json() as
+                    { records: SensorRecord[] };
+
+                return data.records;
+            }
+
+            return null;
+        };
+
+        void load()
+            .then((result) => {
+                if (result) {
+                    setRecords(result);
+                }
+            })
+            .catch((fetchError: unknown) => {
+                if (fetchError instanceof DOMException
+                    && fetchError.name === 'AbortError') {
+                    return;
+                }
                 console.error(
-                    'Failed to fetch data',
+                    'Failed to fetch chart data',
                     fetchError,
                 );
-            }
-        }
-    };
+            });
 
+        return () => {
+            controller.abort();
+        };
+    }, [fromParam, toParam, uid]);
+
+    // Polling only in live mode
     useEffect(() => {
+        if (!isLive) {
+            return;
+        }
+
         const controller = new AbortController();
 
         const poll = async () => {
-            const [from, to] = dateRangeRef.current;
-            if (!from || !to) {
-                return;
-            }
-
             try {
-                await fetchData(
-                    from,
-                    to,
-                    controller.signal,
-                );
+                await fetchNewRecords(controller.signal);
             } catch (fetchError: unknown) {
                 if (fetchError instanceof DOMException
                     && fetchError.name === 'AbortError') {
@@ -160,7 +304,61 @@ export function StationCharts({
             controller.abort();
             clearInterval(intervalId);
         };
-    }, [fetchData]);
+    }, [isLive, fetchNewRecords]);
+
+    /**
+     * Sync the selected date range to URL search params.
+     */
+    const updateUrl = useCallback(
+        (from: string | null, to: string | null) => {
+            const params = new URLSearchParams(
+                window.location.search,
+            );
+
+            if (from) {
+                params.set('from', from);
+            } else {
+                params.delete('from');
+            }
+
+            if (to) {
+                params.set('to', to);
+            } else {
+                params.delete('to');
+            }
+
+            const query = params.toString();
+            const path = query
+                ? `${window.location.pathname}?${query}`
+                : window.location.pathname;
+
+            router.replace(path, { scroll: false });
+        },
+        [router],
+    );
+
+    const handleDateChange = useCallback(
+        (value: DatesRangeValue) => {
+            const [rawFrom, rawTo] = value;
+            const from = typeof rawFrom === 'string'
+                ? rawFrom
+                : null;
+            const to = typeof rawTo === 'string'
+                ? rawTo
+                : null;
+
+            if (from && to) {
+                // Full range selected → historical mode
+                updateUrl(from, to);
+            } else if (!from && !to) {
+                // Cleared → back to live mode (defaults)
+                updateUrl(null, null);
+            }
+            // When only `from` is set (first click), do
+            // nothing — wait for the second click.
+        },
+        [updateUrl],
+    );
 
     const tempChartData = records.map((r) => ({
         date: formatDate(r.ts),
@@ -201,13 +399,10 @@ export function StationCharts({
                     type="range"
                     label="Date Range"
                     placeholder="Pick dates range"
-                    value={ dateRange }
+                    allowSingleDateInRange
                     clearable
-                    onChange={ (val) => {
-                        void handleDateChange(
-                            val as [Date | null, Date | null],
-                        );
-                    } }
+                    value={ pickerValue }
+                    onChange={ handleDateChange }
                 />
             </Box>
 

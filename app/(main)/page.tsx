@@ -1,20 +1,16 @@
-import { Container, Stack, Title } from '@mantine/core';
+'use client';
 
-import { fetchStationSummaries } from '@/lib/data/stations';
+import { Container, Stack, Title } from '@mantine/core';
 
 import { StationsDashboard } from './_components/StationsDashboard';
 
-export const revalidate = 0;
-
-export default async function WeatherStationsPage() {
-    const stations = await fetchStationSummaries();
-
+export default function WeatherStationsPage() {
     return (
         <Container size="xl" py="xl">
             <Stack gap="xl">
                 <Title order={ 1 }>Weather Stations</Title>
 
-                <StationsDashboard initialStations={ stations } />
+                <StationsDashboard />
             </Stack>
         </Container>
     );

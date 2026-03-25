@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-import { Stack } from '@mantine/core';
+import { Loader, Center, Stack } from '@mantine/core';
 
 import type { StationDetail } from '@/lib/types/station';
 
@@ -15,14 +15,12 @@ const POLL_INTERVAL_MS = 30_000;
 
 interface StationDetailViewProps {
     uid: string;
-    initialDetail: StationDetail;
 }
 
 export function StationDetailView({
     uid,
-    initialDetail,
 }: StationDetailViewProps) {
-    const [detail, setDetail] = useState(initialDetail);
+    const [detail, setDetail] = useState<StationDetail | null>(null);
 
     const fetchDetail = useCallback(
         async (signal?: AbortSignal) => {
@@ -52,14 +50,16 @@ export function StationDetailView({
 
     useEffect(() => {
         const controller = new AbortController();
+        const { signal } = controller;
 
-        const intervalId = setInterval(
-            () => void fetchDetail(controller.signal),
-            POLL_INTERVAL_MS,
-        );
+        const poll = () => void fetchDetail(signal);
+
+        const timeoutId = setTimeout(poll, 0);
+        const intervalId = setInterval(poll, POLL_INTERVAL_MS);
 
         return () => {
             controller.abort();
+            clearTimeout(timeoutId);
             clearInterval(intervalId);
         };
     }, [fetchDetail]);
@@ -67,6 +67,14 @@ export function StationDetailView({
     const handleUpdated = useCallback(() => {
         void fetchDetail();
     }, [fetchDetail]);
+
+    if (!detail) {
+        return (
+            <Center py="xl">
+                <Loader />
+            </Center>
+        );
+    }
 
     return (
         <Stack gap="xl">

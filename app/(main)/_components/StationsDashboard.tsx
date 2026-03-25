@@ -12,14 +12,8 @@ import { StationsMapLoader } from './StationsMapLoader';
 
 const POLL_INTERVAL_MS = 30_000;
 
-interface StationsDashboardProps {
-    initialStations: StationSummary[];
-}
-
-export function StationsDashboard({
-    initialStations,
-}: StationsDashboardProps) {
-    const [stations, setStations] = useState(initialStations);
+export function StationsDashboard() {
+    const [stations, setStations] = useState<StationSummary[]>([]);
     const [selectedUids, setSelectedUids] = useState<number[]>([]);
     const flyToRef = useRef<((uid: number) => void) | null>(null);
     const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -49,18 +43,16 @@ export function StationsDashboard({
 
     useEffect(() => {
         const controller = new AbortController();
+        const { signal } = controller;
 
-        const poll = async () => {
-            await fetchStations(controller.signal);
-        };
+        const poll = () => void fetchStations(signal);
 
-        const intervalId = setInterval(
-            () => void poll(),
-            POLL_INTERVAL_MS,
-        );
+        const timeoutId = setTimeout(poll, 0);
+        const intervalId = setInterval(poll, POLL_INTERVAL_MS);
 
         return () => {
             controller.abort();
+            clearTimeout(timeoutId);
             clearInterval(intervalId);
         };
     }, [fetchStations]);

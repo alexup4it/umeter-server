@@ -1,5 +1,9 @@
 import prisma from '@/lib/prisma';
-import type { StationDetail, StationSummary } from '@/lib/types/station';
+import type {
+    SensorRecord,
+    StationDetail,
+    StationSummary,
+} from '@/lib/types/station';
 
 const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -205,4 +209,41 @@ export async function fetchStationDetail(
             ? { filename: pendingFirmware.filename }
             : null,
     };
+}
+
+/**
+ * Fetch sensor records for a station within a date range.
+ * Supports incremental loading via the `after` parameter:
+ * when provided, only records with ts strictly greater than
+ * `after` are returned.
+ */
+export async function fetchSensorRecords(
+    uid: number,
+    from: Date,
+    to: Date,
+    after?: Date,
+): Promise<SensorRecord[]> {
+    const records = await prisma.sensorRecord.findMany({
+        where: {
+            uid,
+            ts: {
+                gt: after ?? undefined,
+                gte: after ? undefined : from,
+                lte: to,
+            },
+        },
+        orderBy: { ts: 'asc' },
+    });
+
+    return records.map((r) => ({
+        ts: r.ts?.toISOString() ?? '',
+        voltage: r.voltage,
+        temperature: r.temperature,
+        humidity: r.humidity,
+        pressure: r.pressure,
+        windDirection: r.windDirection,
+        windSpeedAvg: r.windSpeedAvg,
+        windSpeedMin: r.windSpeedMin,
+        windSpeedMax: r.windSpeedMax,
+    }));
 }

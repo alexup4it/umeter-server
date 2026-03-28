@@ -3,6 +3,7 @@
 import { Paper, Table, Title } from '@mantine/core';
 
 import type { StationDetail } from '@/lib/types/station';
+import { binverToString } from '@/lib/utils/version';
 
 function formatDate(dateString: string | null | undefined): string {
     if (!dateString) {
@@ -99,7 +100,9 @@ export function StationDataTable({ detail }: {
         },
         {
             label: 'App Version',
-            value: detail.info?.appVer ?? '-',
+            value: detail.info?.appVer != null
+                ? binverToString(detail.info.appVer)
+                : '-',
             ts: null,
         },
         {

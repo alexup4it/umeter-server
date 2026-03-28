@@ -11,6 +11,8 @@ import {
     Title,
 } from '@mantine/core';
 
+import { binverToString } from '@/lib/utils/version';
+
 import type { DeviceParams } from '../_lib/types';
 
 interface DeviceInfoProps {
@@ -86,7 +88,9 @@ export function DeviceInfo({
                         </Text>
                         <InfoRow
                             label="Version"
-                            value={ params.appVer }
+                            value={ params.appVer !== undefined
+                                ? binverToString(params.appVer)
+                                : undefined }
                         />
                         <InfoRow
                             label="App Git"

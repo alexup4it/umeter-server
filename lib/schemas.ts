@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const infoPayloadSchema = z.object({
-    uid: z.number().nullable().optional().default(null),
+    uid: z.number(),
     ts: z.number().default(0),
     name: z.string().nullable().optional().default(null),
     bl_git: z.string().nullable().optional().default(null),
@@ -15,11 +15,10 @@ export const infoPayloadSchema = z.object({
     period_upload: z.number().nullable().optional().default(null),
     period_sensors: z.number().nullable().optional().default(null),
     period_anemometer: z.number().nullable().optional().default(null),
-    color: z.string().nullable().optional().default(null),
 });
 
 export const cnetPayloadSchema = z.object({
-    uid: z.number().nullable().optional().default(null),
+    uid: z.number(),
     ts: z.number().default(0),
     mcc: z.number().nullable().optional().default(null),
     mnc: z.number().nullable().optional().default(null),

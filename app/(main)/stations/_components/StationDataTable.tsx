@@ -119,17 +119,17 @@ export function StationDataTable({ detail }: {
         },
         {
             label: 'APN',
-            value: detail.info?.apn ?? '-',
+            value: detail.config?.apn ?? '-',
             ts: null,
         },
         {
             label: 'Period App',
-            value: detail.info?.periodUpload ?? '-',
+            value: detail.config?.periodUpload ?? '-',
             ts: null,
         },
         {
             label: 'Period Sensor',
-            value: detail.info?.periodSensors ?? '-',
+            value: detail.config?.periodSensors ?? '-',
             ts: null,
         },
         {

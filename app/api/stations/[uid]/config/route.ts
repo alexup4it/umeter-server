@@ -22,7 +22,7 @@ export async function GET(
         );
     }
 
-    const pending = await prisma.deviceConfig.findUnique({
+    const pending = await prisma.devicePendingConfig.findUnique({
         where: { deviceUid: uid },
     });
 
@@ -66,7 +66,7 @@ export async function PUT(
         periodAnemometer: body.period_anemometer ?? null,
     };
 
-    const config = await prisma.deviceConfig.upsert({
+    const config = await prisma.devicePendingConfig.upsert({
         where: { deviceUid: uid },
         create: { deviceUid: uid, ...data },
         update: data,
@@ -94,7 +94,7 @@ export async function DELETE(
     }
 
     try {
-        await prisma.deviceConfig.delete({ where: { deviceUid: uid } });
+        await prisma.devicePendingConfig.delete({ where: { deviceUid: uid } });
     } catch {
         return NextResponse.json(
             { error: 'No pending config' },

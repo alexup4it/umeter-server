@@ -17,7 +17,7 @@ export async function getPendingFlags(
     uid: number,
 ): Promise<PendingFlags> {
     const [config, firmware] = await Promise.all([
-        prisma.deviceConfig.findUnique({ where: { deviceUid: uid } }),
+        prisma.devicePendingConfig.findUnique({ where: { deviceUid: uid } }),
         prisma.firmwareAssignment.findUnique({ where: { deviceUid: uid } }),
     ]);
 
@@ -38,12 +38,12 @@ export interface DeviceConfigResponse {
 
 /**
  * Get config for device. Returns pending config if exists,
- * otherwise returns current params from latest Info record.
+ * otherwise returns current params from DeviceConfig.
  */
 export async function getConfigForDevice(
     uid: number,
 ): Promise<DeviceConfigResponse | null> {
-    const pending = await prisma.deviceConfig.findUnique({
+    const pending = await prisma.devicePendingConfig.findUnique({
         where: { deviceUid: uid },
     });
 
@@ -58,23 +58,22 @@ export async function getConfigForDevice(
         };
     }
 
-    // Fall back to current params from latest Info
-    const info = await prisma.info.findFirst({
-        where: { uid },
-        orderBy: { created: 'desc' },
+    // Fall back to current (actual) config
+    const config = await prisma.deviceConfig.findUnique({
+        where: { deviceUid: uid },
     });
 
-    if (!info) {
+    if (!config) {
         return null;
     }
 
     return {
-        apn: info.apn,
-        url_ota: info.urlOta,
-        url_app: info.urlApp,
-        period_upload: info.periodUpload,
-        period_sensors: info.periodSensors,
-        period_anemometer: info.periodAnemometer,
+        apn: config.apn,
+        url_ota: config.urlOta,
+        url_app: config.urlApp,
+        period_upload: config.periodUpload,
+        period_sensors: config.periodSensors,
+        period_anemometer: config.periodAnemometer,
     };
 }
 
@@ -96,7 +95,7 @@ export async function checkAndApplyConfig(
     uid: number,
     info: InfoFields,
 ): Promise<void> {
-    const pending = await prisma.deviceConfig.findUnique({
+    const pending = await prisma.devicePendingConfig.findUnique({
         where: { deviceUid: uid },
     });
 
@@ -116,7 +115,7 @@ export async function checkAndApplyConfig(
             || pending.periodAnemometer === info.periodAnemometer);
 
     if (matches) {
-        await prisma.deviceConfig.delete({ where: { deviceUid: uid } });
+        await prisma.devicePendingConfig.delete({ where: { deviceUid: uid } });
     }
 }
 
@@ -161,11 +160,9 @@ export async function checkAndApplyFirmware(
  * cfg_update / fw_update flags for the given device.
  */
 export async function buildFlaggedResponse(
-    uid: number | null | undefined,
+    uid: number,
 ): Promise<NextResponse> {
-    const flags = uid != null
-        ? await getPendingFlags(uid)
-        : { cfg_update: false, fw_update: false };
+    const flags = await getPendingFlags(uid);
 
     const data: Record<string, unknown> = { status: 'ok' };
 
@@ -177,11 +174,11 @@ export async function buildFlaggedResponse(
     }
 
     const body = JSON.stringify(data);
-    const response = new NextResponse(body, {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-    });
-    response.headers.set('Authorization', hmacBase64(body));
 
-    return response;
+    return new NextResponse(body, {
+        status: 200,
+        headers: {
+            Authorization: hmacBase64(body),
+        },
+    });
 }

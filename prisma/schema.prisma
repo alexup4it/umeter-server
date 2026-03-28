@@ -6,46 +6,100 @@ datasource db {
   provider = "postgresql"
 }
 
-model Info {
-  id               Int       @id @default(autoincrement())
-  created          DateTime  @default(now())
-  uid              Int?
-  ts               DateTime?
-  name             String?   @db.VarChar(256)
-  blGit            String?   @map("bl_git") @db.VarChar(256)
-  blStatus         Int?      @map("bl_status")
-  appGit           String?   @map("app_git") @db.VarChar(256)
-  appVer           Int?      @map("app_ver")
-  mcu              String?   @db.VarChar(256)
-  apn              String?   @db.VarChar(256)
-  urlOta           String?   @map("url_ota") @db.VarChar(256)
-  urlApp           String?   @map("url_app") @db.VarChar(256)
-  periodUpload     Int?      @map("period_upload")
-  periodSensors    Int?      @map("period_sensors")
-  periodAnemometer Int?      @map("period_anemometer")
-  color            String?   @db.VarChar(16)
-  lat              Float?
-  lng              Float?
+model Device {
+  uid         Int      @id
+  created     DateTime @default(now())
+  updated     DateTime @updatedAt
+  model       String?  @db.VarChar(256)
+  displayName String?  @map("display_name") @db.VarChar(256)
 
-  @@map("info")
+  info               DeviceInfo?
+  config             DeviceConfig?
+  pendingConfig      DevicePendingConfig?
+  cnet               DeviceCnet[]
+  status             DeviceStatus[]
+  sensorRecords      SensorRecord[]
+  firmwareAssignment FirmwareAssignment?
+
+  @@map("device")
 }
 
-model Status {
+model DeviceInfo {
+  id        Int     @id @default(autoincrement())
+  deviceUid Int     @unique @map("device_uid")
+  device    Device  @relation(fields: [deviceUid], references: [uid], onDelete: Cascade)
+  blGit     String? @map("bl_git") @db.VarChar(256)
+  blStatus  Int?    @map("bl_status")
+  appGit    String? @map("app_git") @db.VarChar(256)
+  appVer    Int?    @map("app_ver")
+  mcu       String? @db.VarChar(256)
+
+  @@map("device_info")
+}
+
+model DeviceConfig {
+  id               Int     @id @default(autoincrement())
+  deviceUid        Int     @unique @map("device_uid")
+  device           Device  @relation(fields: [deviceUid], references: [uid], onDelete: Cascade)
+  apn              String? @db.VarChar(256)
+  urlOta           String? @map("url_ota") @db.VarChar(256)
+  urlApp           String? @map("url_app") @db.VarChar(256)
+  periodUpload     Int?    @map("period_upload")
+  periodSensors    Int?    @map("period_sensors")
+  periodAnemometer Int?    @map("period_anemometer")
+
+  @@map("device_config")
+}
+
+model DevicePendingConfig {
+  id               Int      @id @default(autoincrement())
+  deviceUid        Int      @unique @map("device_uid")
+  device           Device   @relation(fields: [deviceUid], references: [uid], onDelete: Cascade)
+  created          DateTime @default(now())
+  apn              String?  @db.VarChar(256)
+  urlOta           String?  @map("url_ota") @db.VarChar(256)
+  urlApp           String?  @map("url_app") @db.VarChar(256)
+  periodUpload     Int?     @map("period_upload")
+  periodSensors    Int?     @map("period_sensors")
+  periodAnemometer Int?     @map("period_anemometer")
+
+  @@map("device_pending_config")
+}
+
+model DeviceCnet {
+  id        Int       @id @default(autoincrement())
+  created   DateTime  @default(now())
+  deviceUid Int       @map("device_uid")
+  device    Device    @relation(fields: [deviceUid], references: [uid], onDelete: Cascade)
+  ts        DateTime?
+  mcc       Int?
+  mnc       Int?
+  lac       Int?
+  cid       Int?
+  lev       Int?
+  lat       Float?
+  lng       Float?
+
+  @@map("device_cnet")
+}
+
+model DeviceStatus {
   id           Int       @id @default(autoincrement())
-  created      DateTime  @default(now())
-  uid          Int?
+  deviceUid    Int       @map("device_uid")
+  device       Device    @relation(fields: [deviceUid], references: [uid], onDelete: Cascade)
   ts           DateTime?
   ticks        BigInt?
   tamper       Boolean?
   recordsCount Int?      @map("records_count")
 
-  @@map("status")
+  @@map("device_status")
 }
 
 model SensorRecord {
   id            Int       @id @default(autoincrement())
   created       DateTime  @default(now())
-  uid           Int?
+  deviceUid     Int       @map("device_uid")
+  device        Device    @relation(fields: [deviceUid], references: [uid])
   ts            DateTime?
   voltage       Float?
   temperature   Float?
@@ -59,39 +113,12 @@ model SensorRecord {
   @@map("sensor_record")
 }
 
-model Cnet {
-  id      Int       @id @default(autoincrement())
-  created DateTime  @default(now())
-  uid     Int?
-  ts      DateTime?
-  mcc     Int?
-  mnc     Int?
-  lac     Int?
-  cid     Int?
-  lev     Int?
-  lat     Float?
-  lng     Float?
-
-  @@map("cnet")
-}
-
-model DeviceConfig {
-  deviceUid        Int      @id @map("device_uid")
-  created          DateTime @default(now())
-  apn              String?  @db.VarChar(256)
-  urlOta           String?  @map("url_ota") @db.VarChar(256)
-  urlApp           String?  @map("url_app") @db.VarChar(256)
-  periodUpload     Int?     @map("period_upload")
-  periodSensors    Int?     @map("period_sensors")
-  periodAnemometer Int?     @map("period_anemometer")
-
-  @@map("device_config")
-}
-
 model FirmwareAssignment {
-  deviceUid Int      @id @map("device_uid")
+  deviceUid Int      @unique @map("device_uid")
+  device    Device   @relation(fields: [deviceUid], references: [uid], onDelete: Cascade)
   created   DateTime @default(now())
   filename  String   @db.VarChar(256)
 
+  @@id([deviceUid])
   @@map("firmware_assignment")
 }

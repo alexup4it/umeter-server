@@ -147,7 +147,7 @@ export default function StationsMap({ stations, onRegisterFlyTo }: StationsMapPr
                                             href={ `/stations/${station.uid}` }
                                             style={ { color: 'inherit', textDecoration: 'none' } }
                                         >
-                                            { station.name ?? station.uid }
+                                            { station.displayName ?? `${station.model} - ${station.uid}` }
                                         </Link>
                                     </Text>
                                     <Text size="xs" c="dimmed" style={ { lineHeight: 1.2 } }>

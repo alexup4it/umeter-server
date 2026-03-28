@@ -16,42 +16,42 @@ import { notifications } from '@mantine/notifications';
 
 import type {
     PendingConfig,
-    StationInfo,
+    StationConfig,
 } from '@/lib/types/station';
 
 interface StationConfigPanelProps {
     uid: number;
-    info: StationInfo | null;
+    config: StationConfig | null;
     pendingConfig: PendingConfig | null;
     onUpdated: () => void;
 }
 
 export function StationConfigPanel({
     uid,
-    info,
+    config,
     pendingConfig,
     onUpdated,
 }: StationConfigPanelProps) {
     const [apn, setApn] = useState(
-        pendingConfig?.apn ?? info?.apn ?? '',
+        pendingConfig?.apn ?? config?.apn ?? '',
     );
     const [urlOta, setUrlOta] = useState(
-        pendingConfig?.urlOta ?? info?.urlOta ?? '',
+        pendingConfig?.urlOta ?? config?.urlOta ?? '',
     );
     const [urlApp, setUrlApp] = useState(
-        pendingConfig?.urlApp ?? info?.urlApp ?? '',
+        pendingConfig?.urlApp ?? config?.urlApp ?? '',
     );
     const [periodUpload, setPeriodUpload] = useState<number | string>(
-        pendingConfig?.periodUpload ?? info?.periodUpload ?? '',
+        pendingConfig?.periodUpload ?? config?.periodUpload ?? '',
     );
     const [periodSensors, setPeriodSensors] = useState<number | string>(
-        pendingConfig?.periodSensors ?? info?.periodSensors ?? '',
+        pendingConfig?.periodSensors ?? config?.periodSensors ?? '',
     );
     const [periodAnemometer, setPeriodAnemometer] = useState<
         number | string
     >(
         pendingConfig?.periodAnemometer
-            ?? info?.periodAnemometer
+            ?? config?.periodAnemometer
             ?? '',
     );
     const [submitting, setSubmitting] = useState(false);

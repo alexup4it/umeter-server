@@ -9,81 +9,57 @@ const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 /**
  * Fetch all stations with their latest sensor readings from the last 7 days.
- * Includes stations that have sent status OR info within the time window.
+ * Uses Device as the central entity with relations.
  */
 export async function fetchStationSummaries(): Promise<
     StationSummary[]
 > {
     const weekAgo = new Date(Date.now() - ONE_WEEK_MS);
 
-    const [recentStatuses, recentInfos] = await Promise.all([
-        prisma.status.findMany({
-            where: {
-                ts: { gte: weekAgo },
-                uid: { not: null },
+    const devices = await prisma.device.findMany({
+        include: {
+            info: true,
+            config: true,
+            pendingConfig: { select: { id: true } },
+            firmwareAssignment: { select: { deviceUid: true } },
+            cnet: {
+                where: { lat: { not: null } },
+                orderBy: { ts: 'desc' },
+                take: 1,
             },
-            distinct: ['uid'],
-            orderBy: { ts: 'desc' },
-            select: { uid: true },
-        }),
-        prisma.info.findMany({
-            where: {
-                created: { gte: weekAgo },
-                uid: { not: null },
+            sensorRecords: {
+                where: { ts: { gte: weekAgo } },
+                orderBy: { ts: 'desc' },
+                take: 1,
             },
-            distinct: ['uid'],
-            orderBy: { created: 'desc' },
-            select: { uid: true },
-        }),
-    ]);
+            status: {
+                orderBy: { ts: 'desc' },
+                take: 1,
+            },
+        },
+    });
 
-    const uidSet = new Set<number>();
-    for (const row of recentStatuses) {
-        if (row.uid != null) {
-            uidSet.add(row.uid);
-        }
-    }
-    for (const row of recentInfos) {
-        if (row.uid != null) {
-            uidSet.add(row.uid);
-        }
-    }
+    // Filter to only devices active in the last week
+    return devices
+        .filter((d) => {
+            const hasRecentRecord = d.sensorRecords.length > 0;
+            const hasRecentStatus = d.status.length > 0
+                && d.status[0].ts != null
+                && d.status[0].ts >= weekAgo;
+            const hasRecentCreation = d.created >= weekAgo;
 
-    const uids = [...uidSet];
-
-    if (uids.length === 0) {
-        return [];
-    }
-
-    return Promise.all(
-        uids.map(async (uid) => {
-            const [info, cnet, latestRecord, pendingConfig, pendingFirmware] =
-                await Promise.all([
-                    prisma.info.findFirst({
-                        where: { uid },
-                        orderBy: { created: 'desc' },
-                    }),
-                    prisma.cnet.findFirst({
-                        where: { uid, lat: { not: null } },
-                        orderBy: { ts: 'desc' },
-                    }),
-                    prisma.sensorRecord.findFirst({
-                        where: { uid, ts: { gte: weekAgo } },
-                        orderBy: { ts: 'desc' },
-                    }),
-                    prisma.deviceConfig.findUnique({
-                        where: { deviceUid: uid },
-                    }),
-                    prisma.firmwareAssignment.findUnique({
-                        where: { deviceUid: uid },
-                    }),
-                ]);
+            return hasRecentRecord || hasRecentStatus || hasRecentCreation;
+        })
+        .map((d) => {
+            const latestRecord = d.sensorRecords.length ? d.sensorRecords[0] : null;
+            const latestCnet = d.cnet.length ? d.cnet[0] : null;
 
             return {
-                uid,
-                name: info?.name ?? null,
-                lat: info?.lat ?? cnet?.lat ?? null,
-                lng: info?.lng ?? cnet?.lng ?? null,
+                uid: d.uid,
+                model: d.model,
+                displayName: d.displayName,
+                lat: latestCnet?.lat ?? null,
+                lng: latestCnet?.lng ?? null,
                 lastSeen: latestRecord?.ts?.toISOString() ?? null,
                 temperature: latestRecord?.temperature ?? null,
                 humidity: latestRecord?.humidity ?? null,
@@ -91,11 +67,10 @@ export async function fetchStationSummaries(): Promise<
                 windDirection: latestRecord?.windDirection ?? null,
                 windSpeed: latestRecord?.windSpeedAvg ?? null,
                 voltage: latestRecord?.voltage ?? null,
-                hasPendingConfig: pendingConfig !== null,
-                hasPendingFirmware: pendingFirmware !== null,
+                hasPendingConfig: d.pendingConfig !== null,
+                hasPendingFirmware: d.firmwareAssignment !== null,
             };
-        }),
-    );
+        });
 }
 
 /**
@@ -114,77 +89,79 @@ export async function fetchStationDetail(
     const dateTo = to ?? now;
     const dateFilter = { gte: dateFrom, lte: dateTo };
 
-    const [info, status, cnet, records, pendingConfig, pendingFirmware] =
-        await Promise.all([
-            prisma.info.findFirst({
-                where: { uid },
-                orderBy: { created: 'desc' },
-            }),
-            prisma.status.findFirst({
-                where: { uid },
+    const device = await prisma.device.findUnique({
+        where: { uid },
+        include: {
+            info: true,
+            config: true,
+            pendingConfig: true,
+            firmwareAssignment: true,
+            cnet: {
                 orderBy: { ts: 'desc' },
-            }),
-            prisma.cnet.findFirst({
-                where: { uid },
+                take: 1,
+            },
+            status: {
                 orderBy: { ts: 'desc' },
-            }),
-            prisma.sensorRecord.findMany({
-                where: { uid, ts: dateFilter },
+                take: 1,
+            },
+            sensorRecords: {
+                where: { ts: dateFilter },
                 orderBy: { ts: 'asc' },
-            }),
-            prisma.deviceConfig.findUnique({
-                where: { deviceUid: uid },
-            }),
-            prisma.firmwareAssignment.findUnique({
-                where: { deviceUid: uid },
-            }),
-        ]);
+            },
+        },
+    });
 
-    if (!info && !status) {
+    if (!device) {
         return null;
     }
 
-    // Latest record for voltage
-    const latestRecord = records.length > 0
-        ? records[records.length - 1]
+    const latestStatus = device.status.length ? device.status[0] : null;
+    const latestCnet = device.cnet.length ? device.cnet[0] : null;
+    const latestRecord = device.sensorRecords.length > 0
+        ? device.sensorRecords[device.sensorRecords.length - 1]
         : null;
 
     return {
-        uid,
-        name: info?.name ?? null,
-        lat: info?.lat ?? cnet?.lat ?? null,
-        lng: info?.lng ?? cnet?.lng ?? null,
+        uid: device.uid,
+        model: device.model,
+        displayName: device.displayName,
+        lat: latestCnet?.lat ?? null,
+        lng: latestCnet?.lng ?? null,
         voltage: latestRecord?.voltage ?? null,
-        ticks: status?.ticks != null
-            ? Number(status.ticks)
+        ticks: latestStatus?.ticks != null
+            ? Number(latestStatus.ticks)
             : null,
-        tamper: status?.tamper ?? null,
-        lastSeen: status?.ts?.toISOString() ?? null,
-        info: info
+        tamper: latestStatus?.tamper ?? null,
+        lastSeen: latestStatus?.ts?.toISOString() ?? null,
+        info: device.info
             ? {
-                appGit: info.appGit,
-                appVer: info.appVer,
-                blGit: info.blGit,
-                blStatus: info.blStatus,
-                mcu: info.mcu,
-                apn: info.apn,
-                urlOta: info.urlOta,
-                urlApp: info.urlApp,
-                periodUpload: info.periodUpload,
-                periodSensors: info.periodSensors,
-                periodAnemometer: info.periodAnemometer,
+                appGit: device.info.appGit,
+                appVer: device.info.appVer,
+                blGit: device.info.blGit,
+                blStatus: device.info.blStatus,
+                mcu: device.info.mcu,
             }
             : null,
-        cnet: cnet
+        config: device.config
             ? {
-                mcc: cnet.mcc,
-                mnc: cnet.mnc,
-                lac: cnet.lac,
-                cid: cnet.cid,
-                lev: cnet.lev,
+                apn: device.config.apn,
+                urlOta: device.config.urlOta,
+                urlApp: device.config.urlApp,
+                periodUpload: device.config.periodUpload,
+                periodSensors: device.config.periodSensors,
+                periodAnemometer: device.config.periodAnemometer,
             }
             : null,
-        records: records.map((r) => ({
+        cnet: latestCnet
+            ? {
+                mcc: latestCnet.mcc,
+                mnc: latestCnet.mnc,
+                lac: latestCnet.lac,
+                cid: latestCnet.cid,
+                lev: latestCnet.lev,
+            }
+            : null,
+        records: device.sensorRecords.map((r) => ({
             ts: r.ts?.toISOString() ?? '',
             voltage: r.voltage,
             temperature: r.temperature,
@@ -195,18 +172,18 @@ export async function fetchStationDetail(
             windSpeedMin: r.windSpeedMin,
             windSpeedMax: r.windSpeedMax,
         })),
-        pendingConfig: pendingConfig
+        pendingConfig: device.pendingConfig
             ? {
-                apn: pendingConfig.apn,
-                urlOta: pendingConfig.urlOta,
-                urlApp: pendingConfig.urlApp,
-                periodUpload: pendingConfig.periodUpload,
-                periodSensors: pendingConfig.periodSensors,
-                periodAnemometer: pendingConfig.periodAnemometer,
+                apn: device.pendingConfig.apn,
+                urlOta: device.pendingConfig.urlOta,
+                urlApp: device.pendingConfig.urlApp,
+                periodUpload: device.pendingConfig.periodUpload,
+                periodSensors: device.pendingConfig.periodSensors,
+                periodAnemometer: device.pendingConfig.periodAnemometer,
             }
             : null,
-        pendingFirmware: pendingFirmware
-            ? { filename: pendingFirmware.filename }
+        pendingFirmware: device.firmwareAssignment
+            ? { filename: device.firmwareAssignment.filename }
             : null,
     };
 }
@@ -225,7 +202,7 @@ export async function fetchSensorRecords(
 ): Promise<SensorRecord[]> {
     const records = await prisma.sensorRecord.findMany({
         where: {
-            uid,
+            deviceUid: uid,
             ts: {
                 gt: after ?? undefined,
                 gte: after ? undefined : from,

@@ -85,7 +85,7 @@ export function StationDetailView({
 
             <StationConfigPanel
                 uid={ Number(uid) }
-                info={ detail.info }
+                config={ detail.config }
                 pendingConfig={ detail.pendingConfig }
                 onUpdated={ handleUpdated }
             />

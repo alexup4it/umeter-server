@@ -1,6 +1,7 @@
 export interface StationSummary {
     uid: number;
-    name: string | null;
+    model: string | null;
+    displayName: string | null;
     lat: number | null;
     lng: number | null;
     lastSeen: string | null;
@@ -41,7 +42,8 @@ export interface PendingFirmware {
 
 export interface StationDetail {
     uid: number;
-    name: string | null;
+    model: string | null;
+    displayName: string | null;
     lat: number | null;
     lng: number | null;
     voltage: number | null;
@@ -49,6 +51,7 @@ export interface StationDetail {
     tamper: boolean | null;
     lastSeen: string | null;
     info: StationInfo | null;
+    config: StationConfig | null;
     cnet: StationCnet | null;
     records: SensorRecord[];
     pendingConfig: PendingConfig | null;
@@ -61,6 +64,9 @@ export interface StationInfo {
     blGit: string | null;
     blStatus: number | null;
     mcu: string | null;
+}
+
+export interface StationConfig {
     apn: string | null;
     urlOta: string | null;
     urlApp: string | null;

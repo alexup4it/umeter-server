@@ -25,10 +25,17 @@ export async function POST(request: NextRequest) {
 
     const { header, records } = parsed;
 
+    // Upsert Device record
+    await prisma.device.upsert({
+        where: { uid: header.uid },
+        create: { uid: header.uid },
+        update: {},
+    });
+
     // Insert status record
-    await prisma.status.create({
+    await prisma.deviceStatus.create({
         data: {
-            uid: header.uid,
+            deviceUid: header.uid,
             ts: unixToDate(header.ts),
             ticks: BigInt(header.ticks),
             tamper: header.tamper,
@@ -36,17 +43,17 @@ export async function POST(request: NextRequest) {
         },
     });
 
-    // Insert sensor records (convert raw units → normal units)
+    // Insert sensor records (convert raw units -> normal units)
     if (records.length > 0) {
         await prisma.sensorRecord.createMany({
             data: records.map((r) => ({
-                uid: header.uid,
+                deviceUid: header.uid,
                 ts: unixToDate(r.timestamp),
-                voltage: r.voltage / 1000, // mV → V
-                temperature: r.temperature / 100, // centidegrees → °C
-                humidity: r.humidity / 100, // centipercent → %
-                pressure: r.pressure / 10, // hPa*10 → hPa
-                windDirection: r.windDirection / 100, // centidegrees → °
+                voltage: r.voltage / 1000, // mV -> V
+                temperature: r.temperature / 100, // centidegrees -> C
+                humidity: r.humidity / 100, // centipercent -> %
+                pressure: r.pressure / 10, // hPa*10 -> hPa
+                windDirection: r.windDirection / 100, // centidegrees -> deg
                 windSpeedAvg: r.windSpeedAvg,
                 windSpeedMin: r.windSpeedMin,
                 windSpeedMax: r.windSpeedMax,

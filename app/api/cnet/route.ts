@@ -25,9 +25,17 @@ async function handleRequest(request: NextRequest) {
 
     const payload = cnetPayloadSchema.parse(JSON.parse(body));
 
-    const record = await prisma.cnet.create({
+    // Upsert Device record
+    await prisma.device.upsert({
+        where: { uid: payload.uid },
+        create: { uid: payload.uid },
+        update: {},
+    });
+
+    // Create DeviceCnet record
+    const record = await prisma.deviceCnet.create({
         data: {
-            uid: payload.uid,
+            deviceUid: payload.uid,
             ts: payload.ts ? unixToDate(payload.ts) : null,
             mcc: payload.mcc,
             mnc: payload.mnc,
@@ -37,7 +45,7 @@ async function handleRequest(request: NextRequest) {
         },
     });
 
-    // Resolve cell tower location in background — don't block response to device
+    // Resolve cell tower location in background -- don't block response to device
     if (payload.mcc != null && payload.mnc != null
         && payload.lac != null && payload.cid != null) {
         void lookupCellLocation(
@@ -47,7 +55,7 @@ async function handleRequest(request: NextRequest) {
             payload.cid,
         ).then((location) => {
             if (location) {
-                return prisma.cnet.update({
+                return prisma.deviceCnet.update({
                     where: { id: record.id },
                     data: { lat: location.lat, lng: location.lng },
                 });

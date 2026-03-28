@@ -57,7 +57,7 @@ export async function PUT(request: NextRequest) {
 
     const results = await Promise.all(
         body.uids.map((uid) =>
-            prisma.deviceConfig.upsert({
+            prisma.devicePendingConfig.upsert({
                 where: { deviceUid: uid },
                 create: { deviceUid: uid, ...data },
                 update: data,

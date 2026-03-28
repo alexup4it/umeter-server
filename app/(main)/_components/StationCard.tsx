@@ -124,7 +124,7 @@ export function StationCard({ station, onLocate, selected, onToggleSelect }: Sta
                         </span>
                     ) }
                     <Text fw={ 600 } size="lg" truncate>
-                        { station.name ?? station.uid }
+                        { station.displayName ?? `${station.model} - ${station.uid}` }
                     </Text>
                 </Group>
                 <Group gap="xs">

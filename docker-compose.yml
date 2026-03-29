@@ -18,7 +18,7 @@ services:
     build: .
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "${APP_PORT:-3000}:3000"
     environment:
       DATABASE_URL: postgresql://umeter:${POSTGRES_PASSWORD}@postgres:5432/umeter
       HMAC_SECRET: ${HMAC_SECRET:?Set HMAC_SECRET in .env}

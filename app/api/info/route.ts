@@ -39,70 +39,50 @@ async function handleRequest(request: NextRequest) {
         },
     });
 
-    // Upsert DeviceInfo (1-1 with Device)
+    const infoData = {
+        blGit: payload.bl_git,
+        blStatus: payload.bl_status,
+        appGit: payload.app_git,
+        appVer: payload.app_ver,
+        mcu: payload.mcu,
+    };
+
     await prisma.deviceInfo.upsert({
         where: { deviceUid: payload.uid },
-        create: {
-            deviceUid: payload.uid,
-            blGit: payload.bl_git,
-            blStatus: payload.bl_status,
-            appGit: payload.app_git,
-            appVer: payload.app_ver,
-            mcu: payload.mcu,
-        },
-        update: {
-            blGit: payload.bl_git,
-            blStatus: payload.bl_status,
-            appGit: payload.app_git,
-            appVer: payload.app_ver,
-            mcu: payload.mcu,
-        },
+        create: { deviceUid: payload.uid, ...infoData },
+        update: infoData,
     });
 
-    // Upsert DeviceConfig (actual config reported by device)
+    const configData = {
+        apn: payload.apn,
+        urlOta: payload.url_ota,
+        urlApp: payload.url_app,
+        periodUpload: payload.period_upload,
+        periodSensors: payload.period_sensors,
+        periodAnemometer: payload.period_anemometer,
+    };
+
     await prisma.deviceConfig.upsert({
         where: { deviceUid: payload.uid },
-        create: {
-            deviceUid: payload.uid,
-            apn: payload.apn,
-            urlOta: payload.url_ota,
-            urlApp: payload.url_app,
-            periodUpload: payload.period_upload,
-            periodSensors: payload.period_sensors,
-            periodAnemometer: payload.period_anemometer,
-        },
-        update: {
-            apn: payload.apn,
-            urlOta: payload.url_ota,
-            urlApp: payload.url_app,
-            periodUpload: payload.period_upload,
-            periodSensors: payload.period_sensors,
-            periodAnemometer: payload.period_anemometer,
-        },
+        create: { deviceUid: payload.uid, ...configData },
+        update: configData,
     });
 
-    // Check if pending config/firmware was applied by this info report
+    // Check if pending config/firmware was applied
+    const reportedConfig = {
+        apn: payload.apn,
+        urlOta: payload.url_ota,
+        urlApp: payload.url_app,
+        periodUpload: payload.period_upload,
+        periodSensors: payload.period_sensors,
+        periodAnemometer: payload.period_anemometer,
+        appVer: payload.app_ver,
+    };
+
     await Promise.all([
-        checkAndApplyConfig(payload.uid, {
-            apn: payload.apn ?? null,
-            urlOta: payload.url_ota ?? null,
-            urlApp: payload.url_app ?? null,
-            periodUpload: payload.period_upload ?? null,
-            periodSensors: payload.period_sensors ?? null,
-            periodAnemometer: payload.period_anemometer ?? null,
-            appVer: payload.app_ver ?? null,
-        }),
-        checkAndApplyFirmware(payload.uid, {
-            apn: payload.apn ?? null,
-            urlOta: payload.url_ota ?? null,
-            urlApp: payload.url_app ?? null,
-            periodUpload: payload.period_upload ?? null,
-            periodSensors: payload.period_sensors ?? null,
-            periodAnemometer: payload.period_anemometer ?? null,
-            appVer: payload.app_ver ?? null,
-        }),
+        checkAndApplyConfig(payload.uid, reportedConfig),
+        checkAndApplyFirmware(payload.uid, reportedConfig),
     ]);
 
-    // Respond with remaining pending-update flags
     return buildFlaggedResponse(payload.uid);
 }

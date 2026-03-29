@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     // Upsert Device record
     await prisma.device.upsert({
         where: { uid: header.uid },
-        create: { uid: header.uid },
+        create: { uid: header.uid, model: '' },
         update: {},
     });
 
@@ -61,6 +61,5 @@ export async function POST(request: NextRequest) {
         });
     }
 
-    // Respond with pending-update flags
     return buildFlaggedResponse(header.uid);
 }

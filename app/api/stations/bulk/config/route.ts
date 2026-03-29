@@ -1,62 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { z } from 'zod';
+
 import prisma from '@/lib/prisma';
+import { pendingConfigSchema } from '@/lib/schemas';
 
 export const dynamic = 'force-dynamic';
+
+const bulkConfigSchema = z.object({
+    uids: z.array(z.number().int()).min(1, 'uids is required'),
+    config: pendingConfigSchema,
+});
 
 /**
  * PUT /api/stations/bulk/config
  * Apply config to multiple devices at once.
- * Body: {
- *   uids: number[],
- *   config: {
- *     apn?,
- *     url_ota?,
- *     url_app?,
- *     period_upload?,
- *     period_sensors?,
- *     period_anemometer?
- *   }
- * }
  */
 export async function PUT(request: NextRequest) {
-    const body = await request.json() as {
-        uids?: number[];
-        config?: {
-            apn?: string | null;
-            url_ota?: string | null;
-            url_app?: string | null;
-            period_upload?: number | null;
-            period_sensors?: number | null;
-            period_anemometer?: number | null;
-        };
-    };
+    const parsed = bulkConfigSchema.safeParse(
+        await request.json(),
+    );
 
-    if (!body.uids || body.uids.length === 0) {
+    if (!parsed.success) {
         return NextResponse.json(
-            { error: 'uids array is required' },
+            { error: z.treeifyError(parsed.error) },
             { status: 400 },
         );
     }
 
-    if (!body.config) {
-        return NextResponse.json(
-            { error: 'config object is required' },
-            { status: 400 },
-        );
-    }
+    const { uids, config: body } = parsed.data;
 
     const data = {
-        apn: body.config.apn ?? null,
-        urlOta: body.config.url_ota ?? null,
-        urlApp: body.config.url_app ?? null,
-        periodUpload: body.config.period_upload ?? null,
-        periodSensors: body.config.period_sensors ?? null,
-        periodAnemometer: body.config.period_anemometer ?? null,
+        apn: body.apn,
+        urlOta: body.url_ota,
+        urlApp: body.url_app,
+        periodUpload: body.period_upload,
+        periodSensors: body.period_sensors,
+        periodAnemometer: body.period_anemometer,
     };
 
     const results = await Promise.all(
-        body.uids.map((uid) =>
+        uids.map((uid) =>
             prisma.devicePendingConfig.upsert({
                 where: { deviceUid: uid },
                 create: { deviceUid: uid, ...data },

@@ -11,7 +11,6 @@ interface PendingFlags {
 
 /**
  * Check if a device has pending config or firmware updates.
- * Used by /api/data, /api/info, /api/cnet to add flags to responses.
  */
 export async function getPendingFlags(
     uid: number,
@@ -28,12 +27,12 @@ export async function getPendingFlags(
 }
 
 export interface DeviceConfigResponse {
-    apn: string | null;
-    url_ota: string | null;
-    url_app: string | null;
-    period_upload: number | null;
-    period_sensors: number | null;
-    period_anemometer: number | null;
+    apn: string;
+    url_ota: string;
+    url_app: string;
+    period_upload: number;
+    period_sensors: number;
+    period_anemometer: number;
 }
 
 /**
@@ -58,7 +57,6 @@ export async function getConfigForDevice(
         };
     }
 
-    // Fall back to current (actual) config
     const config = await prisma.deviceConfig.findUnique({
         where: { deviceUid: uid },
     });
@@ -78,18 +76,18 @@ export async function getConfigForDevice(
 }
 
 interface InfoFields {
-    apn: string | null;
-    urlOta: string | null;
-    urlApp: string | null;
-    periodUpload: number | null;
-    periodSensors: number | null;
-    periodAnemometer: number | null;
-    appVer: number | null;
+    apn: string;
+    urlOta: string;
+    urlApp: string;
+    periodUpload: number;
+    periodSensors: number;
+    periodAnemometer: number;
+    appVer: number;
 }
 
 /**
  * Compare incoming info with pending config.
- * If all pending fields match, delete the pending record (mark as applied).
+ * If all pending fields match, delete the pending record.
  */
 export async function checkAndApplyConfig(
     uid: number,
@@ -103,29 +101,25 @@ export async function checkAndApplyConfig(
         return;
     }
 
-    const matches
-        = (pending.apn === null || pending.apn === info.apn)
-        && (pending.urlOta === null || pending.urlOta === info.urlOta)
-        && (pending.urlApp === null || pending.urlApp === info.urlApp)
-        && (pending.periodUpload === null
-            || pending.periodUpload === info.periodUpload)
-        && (pending.periodSensors === null
-            || pending.periodSensors === info.periodSensors)
-        && (pending.periodAnemometer === null
-            || pending.periodAnemometer === info.periodAnemometer);
+    const matches = (
+        pending.apn === info.apn &&
+        pending.urlOta === info.urlOta &&
+        pending.urlApp === info.urlApp &&
+        pending.periodUpload === info.periodUpload &&
+        pending.periodSensors === info.periodSensors &&
+        pending.periodAnemometer === info.periodAnemometer
+    );
 
     if (matches) {
-        await prisma.devicePendingConfig.delete({ where: { deviceUid: uid } });
+        await prisma.devicePendingConfig.delete({
+            where: { deviceUid: uid },
+        });
     }
 }
 
 /**
  * Compare incoming info with pending firmware assignment.
- * If the device's app version matches the assigned firmware version,
- * delete the assignment (mark as applied).
- *
- * Firmware filename format: {dev}-{rev}-{ver}.bin
- * We compare the binver from the filename with appVer from info.
+ * If the device's app version matches, delete the assignment.
  */
 export async function checkAndApplyFirmware(
     uid: number,
@@ -135,11 +129,10 @@ export async function checkAndApplyFirmware(
         where: { deviceUid: uid },
     });
 
-    if (!pending || info.appVer === null) {
+    if (!pending) {
         return;
     }
 
-    // Extract version from filename: {dev}-{rev}-{ver}.bin
     const baseName = pending.filename.replace(/\.bin$/, '');
     const parts = baseName.split('-');
 
@@ -151,13 +144,14 @@ export async function checkAndApplyFirmware(
     const expectedBinver = verToBinver(ver);
 
     if (info.appVer === expectedBinver) {
-        await prisma.firmwareAssignment.delete({ where: { deviceUid: uid } });
+        await prisma.firmwareAssignment.delete({
+            where: { deviceUid: uid },
+        });
     }
 }
 
 /**
- * Build a signed JSON response with { status: "ok" } and optional
- * cfg_update / fw_update flags for the given device.
+ * Build a signed JSON response with pending-update flags.
  */
 export async function buildFlaggedResponse(
     uid: number,

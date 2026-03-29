@@ -1,6 +1,6 @@
 export interface StationSummary {
     uid: number;
-    model: string | null;
+    model: string;
     displayName: string | null;
     lat: number | null;
     lng: number | null;
@@ -17,32 +17,44 @@ export interface StationSummary {
 
 export interface SensorRecord {
     ts: string;
-    voltage: number | null;
-    temperature: number | null;
-    humidity: number | null;
-    pressure: number | null;
-    windDirection: number | null;
-    windSpeedAvg: number | null;
-    windSpeedMin: number | null;
-    windSpeedMax: number | null;
+    voltage: number;
+    temperature: number;
+    humidity: number;
+    pressure: number;
+    windDirection: number;
+    windSpeedAvg: number;
+    windSpeedMin: number;
+    windSpeedMax: number;
 }
 
-export interface PendingConfig {
-    apn: string | null;
-    urlOta: string | null;
-    urlApp: string | null;
-    periodUpload: number | null;
-    periodSensors: number | null;
-    periodAnemometer: number | null;
+export interface StationInfo {
+    appGit: string;
+    appVer: number;
+    blGit: string;
+    blStatus: number;
+    mcu: string;
 }
 
-export interface PendingFirmware {
-    filename: string;
+export interface StationConfig {
+    apn: string;
+    urlOta: string;
+    urlApp: string;
+    periodUpload: number;
+    periodSensors: number;
+    periodAnemometer: number;
+}
+
+export interface StationCnet {
+    mcc: number;
+    mnc: number;
+    lac: number;
+    cid: number;
+    lev: number;
 }
 
 export interface StationDetail {
     uid: number;
-    model: string | null;
+    model: string;
     displayName: string | null;
     lat: number | null;
     lng: number | null;
@@ -53,32 +65,10 @@ export interface StationDetail {
     info: StationInfo | null;
     config: StationConfig | null;
     cnet: StationCnet | null;
-    records: SensorRecord[];
-    pendingConfig: PendingConfig | null;
+    pendingConfig: StationConfig | null;
     pendingFirmware: PendingFirmware | null;
 }
 
-export interface StationInfo {
-    appGit: string | null;
-    appVer: number | null;
-    blGit: string | null;
-    blStatus: number | null;
-    mcu: string | null;
-}
-
-export interface StationConfig {
-    apn: string | null;
-    urlOta: string | null;
-    urlApp: string | null;
-    periodUpload: number | null;
-    periodSensors: number | null;
-    periodAnemometer: number | null;
-}
-
-export interface StationCnet {
-    mcc: number | null;
-    mnc: number | null;
-    lac: number | null;
-    cid: number | null;
-    lev: number | null;
+export interface PendingFirmware {
+    filename: string;
 }

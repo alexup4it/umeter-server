@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { z } from 'zod';
+
 import prisma from '@/lib/prisma';
+import { pendingConfigSchema } from '@/lib/schemas';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,7 +35,6 @@ export async function GET(
 /**
  * PUT /api/stations/[uid]/config
  * Upsert pending config for the device.
- * Body: { apn?, url_ota?, url_app?, period_upload?, period_sensors?, period_anemometer? }
  */
 export async function PUT(
     request: NextRequest,
@@ -48,22 +50,26 @@ export async function PUT(
         );
     }
 
-    const body = await request.json() as {
-        apn?: string | null;
-        url_ota?: string | null;
-        url_app?: string | null;
-        period_upload?: number | null;
-        period_sensors?: number | null;
-        period_anemometer?: number | null;
-    };
+    const parsed = pendingConfigSchema.safeParse(
+        await request.json(),
+    );
+
+    if (!parsed.success) {
+        return NextResponse.json(
+            { error: z.treeifyError(parsed.error) },
+            { status: 400 },
+        );
+    }
+
+    const { data: body } = parsed;
 
     const data = {
-        apn: body.apn ?? null,
-        urlOta: body.url_ota ?? null,
-        urlApp: body.url_app ?? null,
-        periodUpload: body.period_upload ?? null,
-        periodSensors: body.period_sensors ?? null,
-        periodAnemometer: body.period_anemometer ?? null,
+        apn: body.apn,
+        urlOta: body.url_ota,
+        urlApp: body.url_app,
+        periodUpload: body.period_upload,
+        periodSensors: body.period_sensors,
+        periodAnemometer: body.period_anemometer,
     };
 
     const config = await prisma.devicePendingConfig.upsert({
@@ -94,7 +100,9 @@ export async function DELETE(
     }
 
     try {
-        await prisma.devicePendingConfig.delete({ where: { deviceUid: uid } });
+        await prisma.devicePendingConfig.delete({
+            where: { deviceUid: uid },
+        });
     } catch {
         return NextResponse.json(
             { error: 'No pending config' },

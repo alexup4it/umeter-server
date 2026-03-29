@@ -1,17 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { fetchStationDetail } from '@/lib/data/stations';
-import { parseDate } from '@/lib/utils/date';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/stations/[uid]
- * Returns detailed station data with sensor history.
- * Query params: from, to (ISO date strings). Defaults to last 7 days.
+ * Returns detailed station data (without records).
  */
 export async function GET(
-    request: NextRequest,
+    _request: NextRequest,
     { params }: { params: Promise<{ uid: string }> },
 ) {
     const { uid: uidParam } = await params;
@@ -24,15 +22,7 @@ export async function GET(
         );
     }
 
-    const searchParams = request.nextUrl.searchParams;
-
-    const fromParam = searchParams.get('from');
-    const toParam = searchParams.get('to');
-
-    const from = fromParam ? parseDate(fromParam) : undefined;
-    const to = toParam ? parseDate(toParam) : undefined;
-
-    const detail = await fetchStationDetail(uid, from, to);
+    const detail = await fetchStationDetail(uid);
 
     if (!detail) {
         return NextResponse.json(

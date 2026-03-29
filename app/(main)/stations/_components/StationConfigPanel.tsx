@@ -14,15 +14,12 @@ import {
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 
-import type {
-    PendingConfig,
-    StationConfig,
-} from '@/lib/types/station';
+import type { StationConfig } from '@/lib/types/station';
 
 interface StationConfigPanelProps {
     uid: number;
     config: StationConfig | null;
-    pendingConfig: PendingConfig | null;
+    pendingConfig: StationConfig | null;
     onUpdated: () => void;
 }
 
@@ -41,11 +38,19 @@ export function StationConfigPanel({
     const [urlApp, setUrlApp] = useState(
         pendingConfig?.urlApp ?? config?.urlApp ?? '',
     );
-    const [periodUpload, setPeriodUpload] = useState<number | string>(
-        pendingConfig?.periodUpload ?? config?.periodUpload ?? '',
+    const [periodUpload, setPeriodUpload] = useState<
+        number | string
+    >(
+        pendingConfig?.periodUpload
+            ?? config?.periodUpload
+            ?? '',
     );
-    const [periodSensors, setPeriodSensors] = useState<number | string>(
-        pendingConfig?.periodSensors ?? config?.periodSensors ?? '',
+    const [periodSensors, setPeriodSensors] = useState<
+        number | string
+    >(
+        pendingConfig?.periodSensors
+            ?? config?.periodSensors
+            ?? '',
     );
     const [periodAnemometer, setPeriodAnemometer] = useState<
         number | string
@@ -68,18 +73,14 @@ export function StationConfigPanel({
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        apn: apn || null,
-                        url_ota: urlOta || null,
-                        url_app: urlApp || null,
-                        period_upload: periodUpload
-                            ? Number(periodUpload)
-                            : null,
-                        period_sensors: periodSensors
-                            ? Number(periodSensors)
-                            : null,
-                        period_anemometer: periodAnemometer
-                            ? Number(periodAnemometer)
-                            : null,
+                        apn: apn || '',
+                        url_ota: urlOta,
+                        url_app: urlApp,
+                        period_upload: Number(periodUpload),
+                        period_sensors: Number(periodSensors),
+                        period_anemometer: Number(
+                            periodAnemometer,
+                        ),
                     }),
                 },
             );
@@ -91,7 +92,8 @@ export function StationConfigPanel({
             notifications.show({
                 title: 'Config queued',
                 message:
-                    'Configuration will be applied on next device check-in',
+                    'Configuration will be applied on '
+                    + 'next device check-in',
                 color: 'green',
             });
 

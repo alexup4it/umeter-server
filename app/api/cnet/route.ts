@@ -28,7 +28,7 @@ async function handleRequest(request: NextRequest) {
     // Upsert Device record
     await prisma.device.upsert({
         where: { uid: payload.uid },
-        create: { uid: payload.uid },
+        create: { uid: payload.uid, model: '' },
         update: {},
     });
 
@@ -36,7 +36,7 @@ async function handleRequest(request: NextRequest) {
     const record = await prisma.deviceCnet.create({
         data: {
             deviceUid: payload.uid,
-            ts: payload.ts ? unixToDate(payload.ts) : null,
+            ts: unixToDate(payload.ts),
             mcc: payload.mcc,
             mnc: payload.mnc,
             lac: payload.lac,
@@ -45,26 +45,22 @@ async function handleRequest(request: NextRequest) {
         },
     });
 
-    // Resolve cell tower location in background -- don't block response to device
-    if (payload.mcc != null && payload.mnc != null
-        && payload.lac != null && payload.cid != null) {
-        void lookupCellLocation(
-            payload.mcc,
-            payload.mnc,
-            payload.lac,
-            payload.cid,
-        ).then((location) => {
-            if (location) {
-                return prisma.deviceCnet.update({
-                    where: { id: record.id },
-                    data: { lat: location.lat, lng: location.lng },
-                });
-            }
-        }).catch((error: unknown) => {
-            console.error('Cell location resolution failed:', error);
-        });
-    }
+    // Resolve cell tower location in background
+    void lookupCellLocation(
+        payload.mcc,
+        payload.mnc,
+        payload.lac,
+        payload.cid,
+    ).then((location) => {
+        if (location) {
+            return prisma.deviceCnet.update({
+                where: { id: record.id },
+                data: { lat: location.lat, lng: location.lng },
+            });
+        }
+    }).catch((error: unknown) => {
+        console.error('Cell location resolution failed:', error);
+    });
 
-    // Respond with pending-update flags
     return buildFlaggedResponse(payload.uid);
 }

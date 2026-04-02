@@ -1,9 +1,0 @@
-# Dev override: only Postgres, exposed to host for local npm run dev
-services:
-  postgres:
-    ports:
-      - "5432:5432"
-
-  app:
-    profiles:
-      - prod-only

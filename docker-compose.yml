@@ -1,34 +1,37 @@
 services:
-  postgres:
+  app:
+    image: ghcr.io/alexup4it/umeter-server:latest
+    build: .
+    restart: on-failure:5
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    environment:
+      - DATABASE_URL=postgresql://umeter:${POSTGRES_PASSWORD}@db:5432/umeter
+      - HMAC_SECRET=${HMAC_SECRET}
+      - OPENCELL_API_KEY=${OPENCELL_API_KEY:-}
+      - FIRMWARE_DIR=/app/firmware
+    volumes:
+      - firmware:/app/firmware
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
     image: postgres:17-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: umeter
-      POSTGRES_USER: umeter
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      - POSTGRES_USER=umeter
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=umeter
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U umeter -d umeter"]
+      test: ["CMD-SHELL", "pg_isready -U umeter"]
       interval: 5s
       timeout: 3s
       retries: 5
 
-  app:
-    build: .
-    restart: unless-stopped
-    ports:
-      - "${APP_PORT:-3000}:3000"
-    environment:
-      DATABASE_URL: postgresql://umeter:${POSTGRES_PASSWORD}@postgres:5432/umeter
-      HMAC_SECRET: ${HMAC_SECRET:?Set HMAC_SECRET in .env}
-      FIRMWARE_DIR: /app/firmware
-    volumes:
-      - firmware:/app/firmware
-    depends_on:
-      postgres:
-        condition: service_healthy
-
 volumes:
   pgdata:
   firmware:
+  # backups:

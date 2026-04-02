@@ -14,5 +14,8 @@ yarn-error.log*
 .pnpm-debug.log*
 tsconfig.tsbuildinfo
 next-env.d.ts
-nul
-old.py
+.husky
+data
+.sisyphus
+.sisyphusdrafts
+.sisyphusplans

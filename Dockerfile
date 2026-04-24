@@ -55,6 +55,10 @@ COPY --from=builder --chown=node:node /prisma-deps/node_modules ./node_modules
 # Copy Prisma schema + migrations (needed for `prisma migrate deploy`)
 COPY --from=builder --chown=node:node /app/prisma ./prisma
 
+# Create firmware directory owned by node so the named volume inherits
+# correct permissions on first mount
+RUN mkdir -p /app/firmware && chown node:node /app/firmware
+
 # Entrypoint: migrate then start
 COPY --chown=node:node entrypoint.sh ./entrypoint.sh
 RUN chmod +x entrypoint.sh
